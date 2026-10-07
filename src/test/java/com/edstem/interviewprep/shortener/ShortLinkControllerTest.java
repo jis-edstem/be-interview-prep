@@ -138,6 +138,32 @@ class ShortLinkControllerTest {
         assertThat(repository.findByCode("expired1").orElseThrow().getVisitCount()).isZero();
     }
 
+    @Test
+    void statsShowOriginalUrlVisitCountAndCreatedDate() {
+        repository.save(new ShortLink("stats123", LONG_URL, null));
+        mvc.get().uri("/stats123").exchange();
+        mvc.get().uri("/stats123").exchange();
+
+        MvcTestResult result = mvc.get().uri(LINKS + "/stats123/stats").exchange();
+
+        assertThat(result).hasStatusOk();
+        assertThat(result).bodyJson().extractingPath("$.originalUrl").isEqualTo(LONG_URL);
+        assertThat(result).bodyJson().extractingPath("$.visitCount").isEqualTo(2);
+        assertThat(result).bodyJson().extractingPath("$.createdAt").isNotNull();
+    }
+
+    @Test
+    void statsRemainAvailableAfterExpiry() {
+        repository.save(new ShortLink("expired2", LONG_URL, Instant.now().minus(1, ChronoUnit.MINUTES)));
+
+        assertThat(mvc.get().uri(LINKS + "/expired2/stats")).hasStatusOk();
+    }
+
+    @Test
+    void statsForUnknownCodeReturnNotFound() {
+        assertThat(mvc.get().uri(LINKS + "/missing1/stats")).hasStatus(HttpStatus.NOT_FOUND);
+    }
+
     private MvcTestResult shorten(String body) {
         return mvc.post().uri(LINKS).contentType(MediaType.APPLICATION_JSON).content(body).exchange();
     }

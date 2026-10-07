@@ -30,6 +30,11 @@ public class ShortLinkController {
         return ResponseEntity.created(URI.create(created.shortUrl())).body(created);
     }
 
+    @GetMapping("/api/links" + CODE_PATH + "/stats")
+    public ShortLinkStats stats(@PathVariable String code) {
+        return service.stats(code);
+    }
+
     @GetMapping(CODE_PATH)
     public ResponseEntity<Void> redirect(@PathVariable String code) {
         return ResponseEntity.status(HttpStatus.FOUND)

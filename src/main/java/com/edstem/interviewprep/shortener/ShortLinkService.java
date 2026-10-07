@@ -42,6 +42,11 @@ public class ShortLinkService {
         return link.getOriginalUrl();
     }
 
+    @Transactional(readOnly = true)
+    public ShortLinkStats stats(String code) {
+        return ShortLinkStats.from(find(code));
+    }
+
     private ShortLink find(String code) {
         return repository.findByCode(code).orElseThrow(() -> new ShortLinkNotFoundException(code));
     }
