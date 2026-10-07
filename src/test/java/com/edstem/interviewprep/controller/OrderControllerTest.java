@@ -3,6 +3,7 @@ package com.edstem.interviewprep.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 
+import com.edstem.interviewprep.dto.OrderRequest;
 import com.edstem.interviewprep.entity.Product;
 import com.edstem.interviewprep.repository.OrderRepository;
 import com.edstem.interviewprep.repository.ProductRepository;
@@ -10,6 +11,8 @@ import com.jayway.jsonpath.JsonPath;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -92,6 +95,19 @@ class OrderControllerTest {
                 .extractingPath("$.errors[*].field")
                 .asArray()
                 .containsExactlyInAnyOrder("items[0].quantity", "distinctProducts");
+    }
+
+    @Test
+    void tooManyItemsAreRejected() {
+        String items = IntStream.rangeClosed(1, OrderRequest.MAX_ITEMS + 1)
+                .mapToObj("{\"productId\": %d, \"quantity\": 1}"::formatted)
+                .collect(Collectors.joining(","));
+
+        MvcTestResult result = place(UUID.randomUUID().toString(), "{\"items\": [" + items + "]}");
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("items");
+        assertThat(products.findById(productId).orElseThrow().getStock()).isEqualTo(2);
     }
 
     @Test
