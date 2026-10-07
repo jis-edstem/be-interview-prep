@@ -155,6 +155,20 @@ class OrderServiceTest {
         assertThat(stock(book)).isEqualTo(3);
     }
 
+    @Test
+    void productEditFromBeforeACancelCannotUndoTheReturn() {
+        OrderResponse order = service.place(CUSTOMER, UUID.randomUUID(), request(item(book, 2)));
+        ProductResponse before = productService.get(book);
+        service.cancel(CUSTOMER, order.id());
+
+        ProductRequest staleEdit = new ProductRequest(
+                before.name(), before.category(), before.price(), before.stock(), before.rating(), before.version());
+
+        assertThatThrownBy(() -> productService.update(book, staleEdit))
+                .isInstanceOf(ProductVersionConflictException.class);
+        assertThat(stock(book)).isEqualTo(5);
+    }
+
     private long save(String name, int stock) {
         return products.save(new Product(name, "Home", new BigDecimal("10.00"), stock, BigDecimal.ONE))
                 .getId();
