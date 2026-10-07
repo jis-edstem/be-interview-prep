@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
@@ -150,6 +151,77 @@ class ProductControllerTest {
                 .bodyJson()
                 .extractingPath("$.errors[0].message")
                 .isEqualTo("minPrice must not be greater than maxPrice");
+    }
+
+    @Test
+    void getReturnsProductOrNotFound() {
+        long id = repository.save(product("Java Guide", "Books", "25.00", 3)).getId();
+
+        assertThat(mvc.get().uri(PRODUCTS + "/" + id))
+                .bodyJson()
+                .extractingPath("$.name")
+                .isEqualTo("Java Guide");
+        assertThat(mvc.get().uri(PRODUCTS + "/999999")).hasStatus(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void adminUpdatesProduct() {
+        long id = repository.save(product("Java Guide", "Books", "25.00", 3)).getId();
+
+        MvcTestResult result = putProduct(id, productJson("Java Guide, 2nd edition", "29.50"));
+
+        assertThat(result).hasStatusOk();
+        assertThat(result).bodyJson().extractingPath("$.name").isEqualTo("Java Guide, 2nd edition");
+        assertThat(repository.findById(id).orElseThrow().getPrice()).isEqualByComparingTo("29.50");
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void adminDeletesProduct() {
+        long id = repository.save(product("Java Guide", "Books", "25.00", 3)).getId();
+
+        assertThat(mvc.delete().uri(PRODUCTS + "/" + id)).hasStatus(HttpStatus.NO_CONTENT);
+        assertThat(repository.existsById(id)).isFalse();
+    }
+
+    @Test
+    void userCannotChangeProducts() {
+        long id = repository.save(product("Java Guide", "Books", "25.00", 3)).getId();
+
+        assertThat(putProduct(id, productJson("Renamed", "1.00"))).hasStatus(HttpStatus.FORBIDDEN);
+        assertThat(mvc.delete().uri(PRODUCTS + "/" + id)).hasStatus(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void invalidUpdateReturnsFieldErrors() {
+        long id = repository.save(product("Java Guide", "Books", "25.00", 3)).getId();
+
+        MvcTestResult result = putProduct(id, """
+                {"name": "", "category": "Books", "price": -1, "stock": -5, "rating": 7}
+                """);
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.errors[*].field")
+                .asArray()
+                .containsExactlyInAnyOrder("name", "price", "stock", "rating");
+    }
+
+    private MvcTestResult putProduct(long id, String body) {
+        return mvc.put()
+                .uri(PRODUCTS + "/" + id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body)
+                .exchange();
+    }
+
+    private static String productJson(String name, String price) {
+        return """
+                {"name": "%s", "category": "Books", "price": %s, "stock": 3, "rating": 4.5}
+                """.formatted(name, price);
     }
 
     private static Product product(String name, String category, String price, int stock) {

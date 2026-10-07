@@ -58,4 +58,12 @@ public class Product {
         this.stock = stock;
         this.rating = rating;
     }
+
+    public void update(String name, String category, BigDecimal price, int stock, BigDecimal rating) {
+        this.name = name;
+        this.category = category;
+        this.price = price;
+        this.stock = stock;
+        this.rating = rating;
+    }
 }
