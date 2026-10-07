@@ -1,0 +1,32 @@
+meta {
+  name: Update product from a stale version
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/products/{{productId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminToken}}
+}
+
+body:json {
+  {
+    "name": "Books item 1",
+    "category": "Books",
+    "price": 19.99,
+    "stock": 25,
+    "rating": 4.5,
+    "version": {{productVersion}}
+  }
+}
+
+tests {
+  test("returns 409", function() {
+    expect(res.status).to.equal(409);
+  });
+}

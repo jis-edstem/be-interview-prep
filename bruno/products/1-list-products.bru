@@ -1,0 +1,33 @@
+meta {
+  name: List products with filters
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/products?category=Books&minPrice=10&maxPrice=500&inStock=true&name=item&page=0&size=20&sort=price,desc
+  body: none
+  auth: bearer
+}
+
+params:query {
+  category: Books
+  minPrice: 10
+  maxPrice: 500
+  inStock: true
+  name: item
+  page: 0
+  size: 20
+  sort: price,desc
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("returns a page", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.totalElements).to.be.a("number");
+  });
+}
