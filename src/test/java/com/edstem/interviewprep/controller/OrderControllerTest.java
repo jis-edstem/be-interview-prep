@@ -95,6 +95,19 @@ class OrderControllerTest {
     }
 
     @Test
+    void cancelReturnsCancelledOrder() {
+        Number id = id(place(UUID.randomUUID().toString(), items(productId, 1)));
+
+        MvcTestResult result = mvc.post()
+                .uri(ORDERS + "/{id}/cancel", id)
+                .with(jwt().jwt(token -> token.subject(CUSTOMER)))
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+        assertThat(result).bodyJson().extractingPath("$.status").isEqualTo("CANCELLED");
+    }
+
+    @Test
     void anotherCustomersOrderIsNotFound() {
         Number id = id(place(UUID.randomUUID().toString(), items(productId, 1)));
 

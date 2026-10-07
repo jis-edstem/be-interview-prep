@@ -10,6 +10,7 @@ import com.edstem.interviewprep.entity.OrderStatus;
 import com.edstem.interviewprep.entity.Product;
 import com.edstem.interviewprep.exception.IdempotencyKeyReusedException;
 import com.edstem.interviewprep.exception.InsufficientStockException;
+import com.edstem.interviewprep.exception.OrderNotFoundException;
 import com.edstem.interviewprep.exception.ProductNotFoundException;
 import com.edstem.interviewprep.repository.OrderRepository;
 import com.edstem.interviewprep.repository.ProductRepository;
@@ -31,6 +32,7 @@ class OrderServiceTest {
     private static final long OTHER_CUSTOMER = 2L;
 
     private final OrderService service;
+    private final ProductService productService;
     private final OrderRepository orders;
     private final ProductRepository products;
 
@@ -105,6 +107,36 @@ class OrderServiceTest {
         assertThatThrownBy(() -> service.place(CUSTOMER, key, request(item(book, 2))))
                 .isInstanceOf(IdempotencyKeyReusedException.class);
         assertThat(stock(book)).isEqualTo(4);
+    }
+
+    @Test
+    void cancellingReturnsStockOnce() {
+        OrderResponse order = service.place(CUSTOMER, UUID.randomUUID(), request(item(book, 2), item(lamp, 1)));
+
+        assertThat(service.cancel(CUSTOMER, order.id()).status()).isEqualTo(OrderStatus.CANCELLED);
+        service.cancel(CUSTOMER, order.id());
+
+        assertThat(stock(book)).isEqualTo(5);
+        assertThat(stock(lamp)).isEqualTo(1);
+    }
+
+    @Test
+    void customerCannotCancelAnotherCustomersOrder() {
+        OrderResponse order = service.place(CUSTOMER, UUID.randomUUID(), request(item(book, 2)));
+
+        assertThatThrownBy(() -> service.cancel(OTHER_CUSTOMER, order.id())).isInstanceOf(OrderNotFoundException.class);
+        assertThat(stock(book)).isEqualTo(3);
+    }
+
+    @Test
+    void productLookupShowsStockAfterOrderAndCancel() {
+        productService.get(book);
+
+        OrderResponse order = service.place(CUSTOMER, UUID.randomUUID(), request(item(book, 2)));
+        assertThat(productService.get(book).stock()).isEqualTo(3);
+
+        service.cancel(CUSTOMER, order.id());
+        assertThat(productService.get(book).stock()).isEqualTo(5);
     }
 
     private long save(String name, int stock) {

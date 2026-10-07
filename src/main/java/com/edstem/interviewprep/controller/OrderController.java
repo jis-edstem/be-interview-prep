@@ -46,6 +46,11 @@ public class OrderController {
         return service.get(customerId(jwt), id);
     }
 
+    @PostMapping("/{id}/cancel")
+    public OrderResponse cancel(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+        return service.cancel(customerId(jwt), id);
+    }
+
     private static Long customerId(Jwt jwt) {
         return Long.valueOf(jwt.getSubject());
     }

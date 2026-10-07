@@ -5,6 +5,7 @@ import com.edstem.interviewprep.dto.OrderRequest;
 import com.edstem.interviewprep.dto.OrderResponse;
 import com.edstem.interviewprep.entity.Order;
 import com.edstem.interviewprep.entity.OrderItem;
+import com.edstem.interviewprep.entity.OrderStatus;
 import com.edstem.interviewprep.exception.IdempotencyKeyReusedException;
 import com.edstem.interviewprep.exception.OrderNotFoundException;
 import com.edstem.interviewprep.repository.OrderRepository;
@@ -44,6 +45,16 @@ public class OrderService {
                 .findByIdAndCustomerId(id, customerId)
                 .map(OrderResponse::from)
                 .orElseThrow(() -> new OrderNotFoundException(id));
+    }
+
+    @Transactional
+    public OrderResponse cancel(Long customerId, Long id) {
+        Order order = repository.findForUpdate(id, customerId).orElseThrow(() -> new OrderNotFoundException(id));
+        if (order.getStatus() == OrderStatus.PLACED) {
+            order.cancel();
+            order.getItems().forEach(item -> productService.releaseStock(item.getProductId(), item.getQuantity()));
+        }
+        return OrderResponse.from(order);
     }
 
     private OrderResponse create(Long customerId, UUID idempotencyKey, OrderRequest request) {
