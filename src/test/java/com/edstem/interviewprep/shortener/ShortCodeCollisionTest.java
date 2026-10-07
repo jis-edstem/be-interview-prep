@@ -3,6 +3,8 @@ package com.edstem.interviewprep.shortener;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,6 +53,7 @@ class ShortCodeCollisionTest {
         assertThatThrownBy(() -> service.shorten(new ShortenRequest("https://example.com/new", null), BASE_URL))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("No unique short code after " + ShortLinkService.MAX_CODE_ATTEMPTS + " attempts");
+        then(codeGenerator).should(times(ShortLinkService.MAX_CODE_ATTEMPTS)).next();
         assertThat(repository.count()).isEqualTo(1);
     }
 }
