@@ -164,6 +164,14 @@ class ShortLinkControllerTest {
     }
 
     @Test
+    void shorterRootPathsAreNotTreatedAsCodes() {
+        MvcTestResult result = mvc.get().uri("/login").exchange();
+
+        assertThat(result).hasStatus(HttpStatus.NOT_FOUND);
+        assertThat(result).bodyJson().extractingPath("$.detail").asString().doesNotStartWith("Short link");
+    }
+
+    @Test
     void expiredCodeReturnsGoneAndIsNotCounted() {
         repository.save(new ShortLink("expired1", LONG_URL, Instant.now().minus(1, ChronoUnit.MINUTES)));
 
