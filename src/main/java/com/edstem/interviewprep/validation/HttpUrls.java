@@ -43,7 +43,7 @@ public final class HttpUrls {
         StringBuilder rebuilt = new StringBuilder(uri.getScheme())
                 .append("://")
                 .append(authority, 0, userInfoEnd)
-                .append(IDN.toASCII(hostAndPort.substring(0, hostEnd)))
+                .append(IDN.toASCII(hostAndPort.substring(0, hostEnd), IDN.USE_STD3_ASCII_RULES))
                 .append(hostAndPort.substring(hostEnd));
         if (uri.getRawPath() != null) {
             rebuilt.append(uri.getRawPath());

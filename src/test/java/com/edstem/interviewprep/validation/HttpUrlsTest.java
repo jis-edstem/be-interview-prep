@@ -28,7 +28,10 @@ class HttpUrlsTest {
                 "javascript:alert(1)",
                 "https://",
                 "mailto:someone@example.com",
-                "http://my_host.example.com/x"
+                "http://my_host.example.com/x",
+                "http://my_例え.jp/x",
+                "http://-例え.jp/",
+                "http://-example.com/"
             })
     void rejectsNonHttpOrHostlessUrls(String url) {
         assertThat(HttpUrls.toAscii(url)).isEmpty();
