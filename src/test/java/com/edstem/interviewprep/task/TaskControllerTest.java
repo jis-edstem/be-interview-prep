@@ -114,6 +114,17 @@ class TaskControllerTest {
     }
 
     @Test
+    void notFoundUsesErrorFormat() {
+        MvcTestResult result = mvc.get().uri(TASKS + "/999").exchange();
+
+        assertThat(result).hasStatus(HttpStatus.NOT_FOUND);
+        assertThat(result).bodyJson().extractingPath("$.status").isEqualTo(404);
+        assertThat(result).bodyJson().extractingPath("$.title").isEqualTo("Not Found");
+        assertThat(result).bodyJson().extractingPath("$.detail").isEqualTo("Task 999 not found");
+        assertThat(result).bodyJson().extractingPath("$.instance").isEqualTo(TASKS + "/999");
+    }
+
+    @Test
     void invalidFieldsReturnFieldLevelMessages() {
         String body = """
                 {"title": " ", "dueDate": "%s"}
