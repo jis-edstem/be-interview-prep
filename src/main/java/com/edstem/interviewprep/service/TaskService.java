@@ -8,18 +8,16 @@ import com.edstem.interviewprep.exception.TaskNotFoundException;
 import com.edstem.interviewprep.exception.TaskVersionConflictException;
 import com.edstem.interviewprep.repository.TaskRepository;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class TaskService {
 
     private final TaskRepository repository;
-
-    public TaskService(TaskRepository repository) {
-        this.repository = repository;
-    }
 
     public List<TaskResponse> list(TaskStatus status) {
         List<Task> tasks = status == null ? repository.findAll() : repository.findByStatus(status);

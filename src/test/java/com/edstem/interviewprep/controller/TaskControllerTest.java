@@ -6,6 +6,7 @@ import com.edstem.interviewprep.entity.Task;
 import com.edstem.interviewprep.entity.TaskStatus;
 import com.edstem.interviewprep.repository.TaskRepository;
 import java.time.LocalDate;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -19,6 +20,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@RequiredArgsConstructor
 class TaskControllerTest {
 
     private static final String TASKS = "/api/tasks";
@@ -26,11 +28,6 @@ class TaskControllerTest {
 
     private final MockMvcTester mvc;
     private final TaskRepository repository;
-
-    TaskControllerTest(MockMvcTester mvc, TaskRepository repository) {
-        this.mvc = mvc;
-        this.repository = repository;
-    }
 
     @BeforeEach
     void clearTasks() {

@@ -6,6 +6,7 @@ import com.edstem.interviewprep.entity.ShortLink;
 import com.edstem.interviewprep.repository.ShortLinkRepository;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,6 +22,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@RequiredArgsConstructor
 class ShortLinkControllerTest {
 
     private static final String LINKS = "/api/links";
@@ -29,11 +31,6 @@ class ShortLinkControllerTest {
 
     private final MockMvcTester mvc;
     private final ShortLinkRepository repository;
-
-    ShortLinkControllerTest(MockMvcTester mvc, ShortLinkRepository repository) {
-        this.mvc = mvc;
-        this.repository = repository;
-    }
 
     @BeforeEach
     void clearLinks() {

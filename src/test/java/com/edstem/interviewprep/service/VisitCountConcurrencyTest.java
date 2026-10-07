@@ -10,12 +10,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestConstructor;
 
 @SpringBootTest
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@RequiredArgsConstructor
 class VisitCountConcurrencyTest {
 
     private static final int THREADS = 20;
@@ -23,11 +25,6 @@ class VisitCountConcurrencyTest {
 
     private final ShortLinkService service;
     private final ShortLinkRepository repository;
-
-    VisitCountConcurrencyTest(ShortLinkService service, ShortLinkRepository repository) {
-        this.service = service;
-        this.repository = repository;
-    }
 
     @Test
     void simultaneousVisitsAreAllCounted() {

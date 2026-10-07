@@ -7,10 +7,15 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "short_links")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ShortLink {
 
     public static final int CODE_LENGTH = 8;
@@ -35,8 +40,6 @@ public class ShortLink {
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
-    protected ShortLink() {}
-
     public ShortLink(String code, String originalUrl, Instant expiresAt) {
         this.code = code;
         this.originalUrl = originalUrl;
@@ -45,29 +48,5 @@ public class ShortLink {
 
     public boolean isExpiredAt(Instant instant) {
         return expiresAt != null && !instant.isBefore(expiresAt);
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public String getOriginalUrl() {
-        return originalUrl;
-    }
-
-    public Instant getExpiresAt() {
-        return expiresAt;
-    }
-
-    public long getVisitCount() {
-        return visitCount;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
     }
 }

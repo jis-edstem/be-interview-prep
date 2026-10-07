@@ -8,6 +8,7 @@ import static org.mockito.BDDMockito.given;
 import com.edstem.interviewprep.controller.TaskController;
 import com.edstem.interviewprep.entity.Task;
 import com.edstem.interviewprep.service.TaskService;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpStatus;
@@ -20,16 +21,13 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 @WebMvcTest(TaskController.class)
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@RequiredArgsConstructor
 class ApiExceptionHandlerTest {
 
     private final MockMvcTester mvc;
 
     @MockitoBean
     private TaskService taskService;
-
-    ApiExceptionHandlerTest(MockMvcTester mvc) {
-        this.mvc = mvc;
-    }
 
     @Test
     void unexpectedErrorReturnsGenericJsonWithoutInternals() {

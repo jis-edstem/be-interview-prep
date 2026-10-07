@@ -9,22 +9,19 @@ import com.edstem.interviewprep.exception.ShortLinkNotFoundException;
 import com.edstem.interviewprep.repository.ShortLinkRepository;
 import com.edstem.interviewprep.validation.HttpUrls;
 import java.time.Instant;
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class ShortLinkService {
 
     static final int MAX_CODE_ATTEMPTS = 5;
 
     private final ShortLinkRepository repository;
     private final ShortCodeGenerator codeGenerator;
-
-    public ShortLinkService(ShortLinkRepository repository, ShortCodeGenerator codeGenerator) {
-        this.repository = repository;
-        this.codeGenerator = codeGenerator;
-    }
 
     public ShortLinkResponse shorten(ShortenRequest request, String baseUrl) {
         String url = HttpUrls.toAscii(request.url())

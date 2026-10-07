@@ -7,6 +7,7 @@ import com.edstem.interviewprep.entity.ShortLink;
 import com.edstem.interviewprep.service.ShortLinkService;
 import jakarta.validation.Valid;
 import java.net.URI;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,15 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
+@RequiredArgsConstructor
 public class ShortLinkController {
 
     private static final String CODE_PATH = "/{code:[A-Za-z0-9]{" + ShortLink.CODE_LENGTH + "}}";
 
     private final ShortLinkService service;
-
-    public ShortLinkController(ShortLinkService service) {
-        this.service = service;
-    }
 
     @PostMapping("/api/links")
     public ResponseEntity<ShortLinkResponse> shorten(@Valid @RequestBody ShortenRequest request) {

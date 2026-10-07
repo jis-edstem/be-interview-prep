@@ -10,6 +10,7 @@ import com.edstem.interviewprep.dto.ShortLinkResponse;
 import com.edstem.interviewprep.dto.ShortenRequest;
 import com.edstem.interviewprep.entity.ShortLink;
 import com.edstem.interviewprep.repository.ShortLinkRepository;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,6 +20,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@RequiredArgsConstructor
 class ShortCodeCollisionTest {
 
     private static final String TAKEN = "TAKEN123";
@@ -29,11 +31,6 @@ class ShortCodeCollisionTest {
 
     @MockitoBean
     private ShortCodeGenerator codeGenerator;
-
-    ShortCodeCollisionTest(ShortLinkService service, ShortLinkRepository repository) {
-        this.service = service;
-        this.repository = repository;
-    }
 
     @BeforeEach
     void storeLinkWithTakenCode() {
