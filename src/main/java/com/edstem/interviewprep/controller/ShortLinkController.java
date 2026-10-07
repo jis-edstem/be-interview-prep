@@ -22,7 +22,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RequiredArgsConstructor
 public class ShortLinkController {
 
-    private static final String CODE_PATH = "/{code:[A-Za-z0-9]{" + ShortLink.CODE_LENGTH + "}}";
+    public static final String CODE_PATH = "/{code:[A-Za-z0-9]{" + ShortLink.CODE_LENGTH + "}}";
 
     private final ShortLinkService service;
 
