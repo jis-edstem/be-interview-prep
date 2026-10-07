@@ -94,7 +94,7 @@ class OrderControllerTest {
                 .bodyJson()
                 .extractingPath("$.errors[*].field")
                 .asArray()
-                .containsExactlyInAnyOrder("items[0].quantity", "distinctProducts");
+                .containsExactlyInAnyOrder("items[0].quantity", "items");
     }
 
     @Test
