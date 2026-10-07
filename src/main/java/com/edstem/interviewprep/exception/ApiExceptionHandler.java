@@ -15,6 +15,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -51,7 +52,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         List<FieldErrorResponse> errors = ex.getBindingResult().getFieldErrors().stream()
-                .map(error -> new FieldErrorResponse(error.getField(), error.getDefaultMessage()))
+                .map(ApiExceptionHandler::fieldError)
                 .toList();
         ProblemDetail problem = ex.getBody();
         problem.setDetail("Request has invalid fields");
@@ -85,6 +86,13 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             problem.setProperty(ERRORS_PROPERTY, List.of(fieldError(mismatch)));
         }
         return handleExceptionInternal(ex, problem, headers, status, request);
+    }
+
+    private static FieldErrorResponse fieldError(FieldError error) {
+        String message = error.contains(TypeMismatchException.class)
+                ? error.getField() + " has an invalid value '" + error.getRejectedValue() + "'"
+                : error.getDefaultMessage();
+        return new FieldErrorResponse(error.getField(), message);
     }
 
     private static FieldErrorResponse fieldError(MismatchedInputException mismatch) {

@@ -154,6 +154,18 @@ class ProductControllerTest {
     }
 
     @Test
+    void unconvertibleFilterValueIsRejectedWithFieldMessage() {
+        MvcTestResult result = mvc.get().uri(PRODUCTS).param("minPrice", "abc").exchange();
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("minPrice");
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.errors[0].message")
+                .isEqualTo("minPrice has an invalid value 'abc'");
+    }
+
+    @Test
     void getReturnsProductOrNotFound() {
         long id = repository.save(product("Java Guide", "Books", "25.00", 3)).getId();
 
