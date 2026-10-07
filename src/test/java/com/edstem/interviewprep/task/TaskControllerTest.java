@@ -118,6 +118,17 @@ class TaskControllerTest {
     }
 
     @Test
+    void updateValidatesTaskFields() {
+        long id = saveTask("Write tests", TaskStatus.TODO);
+
+        MvcTestResult result = putTask(id, updateJson(" ", "TODO", 0L));
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("title");
+        assertThat(repository.findById(id).orElseThrow().getTitle()).isEqualTo("Write tests");
+    }
+
+    @Test
     void deleteRemovesTask() {
         long id = saveTask("Write tests", TaskStatus.TODO);
 
