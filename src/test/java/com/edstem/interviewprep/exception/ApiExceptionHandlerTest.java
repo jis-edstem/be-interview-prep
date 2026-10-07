@@ -5,15 +5,18 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
+import com.edstem.interviewprep.config.SecurityConfig;
 import com.edstem.interviewprep.controller.TaskController;
 import com.edstem.interviewprep.entity.Task;
 import com.edstem.interviewprep.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
@@ -21,6 +24,8 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 @WebMvcTest(TaskController.class)
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@Import(SecurityConfig.class)
+@WithMockUser
 @RequiredArgsConstructor
 class ApiExceptionHandlerTest {
 
