@@ -58,13 +58,25 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private static FieldErrorResponse fieldError(MismatchedInputException mismatch) {
-        String field = mismatch.getPath().stream()
-                .map(JsonMappingException.Reference::getFieldName)
-                .reduce((parent, child) -> parent + "." + child)
-                .orElseThrow();
+        String field = fieldPath(mismatch.getPath());
         String message = mismatch instanceof InvalidFormatException invalid
                 ? field + " has an invalid value '" + invalid.getValue() + "'"
                 : field + " has the wrong type";
         return new FieldErrorResponse(field, message);
+    }
+
+    private static String fieldPath(List<JsonMappingException.Reference> path) {
+        StringBuilder field = new StringBuilder();
+        for (JsonMappingException.Reference reference : path) {
+            if (reference.getFieldName() == null) {
+                field.append('[').append(reference.getIndex()).append(']');
+            } else {
+                if (!field.isEmpty()) {
+                    field.append('.');
+                }
+                field.append(reference.getFieldName());
+            }
+        }
+        return field.toString();
     }
 }
