@@ -57,6 +57,34 @@ class OrderControllerTest {
     }
 
     @Test
+    void retryWithSameKeyReturnsTheOriginalOrder() {
+        String key = UUID.randomUUID().toString();
+        MvcTestResult first = place(key, items(productId, 1));
+
+        MvcTestResult retry = place(key, items(productId, 1));
+
+        assertThat(retry).hasStatus(HttpStatus.CREATED);
+        assertThat(retry).bodyJson().extractingPath("$.id").isEqualTo(id(first));
+        assertThat(retry).hasHeader("Location", "http://localhost/api/orders/" + id(first));
+        assertThat(products.findById(productId).orElseThrow().getStock()).isEqualTo(1);
+    }
+
+    @Test
+    void reusingKeyForDifferentItemsReturnsUnprocessable() {
+        String key = UUID.randomUUID().toString();
+        place(key, items(productId, 1));
+
+        MvcTestResult result = place(key, items(productId, 2));
+
+        assertThat(result).hasStatus(HttpStatus.UNPROCESSABLE_ENTITY);
+        assertThat(result).hasContentType(MediaType.APPLICATION_PROBLEM_JSON);
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.detail")
+                .isEqualTo("Idempotency-Key " + key + " was already used for a different order");
+    }
+
+    @Test
     void insufficientStockReturnsConflict() {
         MvcTestResult result = place(UUID.randomUUID().toString(), items(productId, 3));
 
