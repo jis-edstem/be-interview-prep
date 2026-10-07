@@ -62,6 +62,16 @@ class UserControllerTest {
     }
 
     @Test
+    void userCannotReachAdminEndpointWithHead() {
+        MvcTestResult result = mvc.head()
+                .uri("/api/users")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + login("user@example.com"))
+                .exchange();
+
+        assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
     void adminCanListAllUsers() {
         MvcTestResult result = getAs("/api/users", "admin@example.com");
 
