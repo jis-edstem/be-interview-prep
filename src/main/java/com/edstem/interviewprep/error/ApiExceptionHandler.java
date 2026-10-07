@@ -3,7 +3,9 @@ package com.edstem.interviewprep.error;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import java.util.Arrays;
 import java.util.List;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -43,6 +45,22 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         ProblemDetail problem = ex.getBody();
         problem.setDetail("Request has invalid fields");
         problem.setProperty(ERRORS_PROPERTY, errors);
+        return handleExceptionInternal(ex, problem, headers, status, request);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleTypeMismatch(
+            TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        String field = ex.getPropertyName();
+        if (field == null) {
+            return super.handleTypeMismatch(ex, headers, status, request);
+        }
+        Class<?> requiredType = ex.getRequiredType();
+        String message = requiredType != null && requiredType.isEnum()
+                ? field + " must be one of " + Arrays.toString(requiredType.getEnumConstants())
+                : field + " has an invalid value '" + ex.getValue() + "'";
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, "Request has invalid fields");
+        problem.setProperty(ERRORS_PROPERTY, List.of(new FieldErrorResponse(field, message)));
         return handleExceptionInternal(ex, problem, headers, status, request);
     }
 

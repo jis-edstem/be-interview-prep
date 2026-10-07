@@ -81,6 +81,25 @@ class TaskControllerTest {
     }
 
     @Test
+    void unknownStatusFilterIsRejected() {
+        MvcTestResult result = mvc.get().uri(TASKS).param("status", "BLOCKED").exchange();
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("status");
+        assertThat(result).bodyJson().extractingPath("$.errors[0].message")
+                .isEqualTo("status must be one of [TODO, IN_PROGRESS, DONE]");
+    }
+
+    @Test
+    void nonNumericIdIsRejected() {
+        MvcTestResult result = mvc.get().uri(TASKS + "/abc").exchange();
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("id");
+        assertThat(result).bodyJson().extractingPath("$.errors[0].message").isEqualTo("id has an invalid value 'abc'");
+    }
+
+    @Test
     void updateReplacesTaskFields() {
         long id = saveTask("Write tests", TaskStatus.TODO);
 
