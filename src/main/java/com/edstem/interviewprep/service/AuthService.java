@@ -13,7 +13,6 @@ import com.edstem.interviewprep.exception.InvalidCredentialsException;
 import com.edstem.interviewprep.repository.UserRepository;
 import java.time.Instant;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -49,7 +48,7 @@ public class AuthService {
     }
 
     public UserResponse register(RegisterRequest request) {
-        String email = normalizeEmail(request.email());
+        String email = User.normalizeEmail(request.email());
         User user = new User(email, passwordEncoder.encode(request.password()), Role.USER);
         try {
             return UserResponse.from(repository.saveAndFlush(user));
@@ -62,7 +61,7 @@ public class AuthService {
     }
 
     public TokenResponse login(LoginRequest request) {
-        Optional<User> user = repository.findByEmail(normalizeEmail(request.email()));
+        Optional<User> user = repository.findByEmail(User.normalizeEmail(request.email()));
         String hash = user.map(User::getPasswordHash).orElse(unknownUserHash);
         boolean passwordMatches = passwordEncoder.matches(request.password(), hash);
         if (user.isEmpty() || !passwordMatches) {
@@ -84,9 +83,5 @@ public class AuthService {
         String token =
                 jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
         return new TokenResponse(token, TOKEN_TYPE, jwtProperties.ttl().toSeconds());
-    }
-
-    private static String normalizeEmail(String email) {
-        return email.trim().toLowerCase(Locale.ROOT);
     }
 }
