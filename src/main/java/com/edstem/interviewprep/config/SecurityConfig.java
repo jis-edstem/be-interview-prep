@@ -3,6 +3,7 @@ package com.edstem.interviewprep.config;
 import com.edstem.interviewprep.controller.ShortLinkController;
 import com.edstem.interviewprep.exception.SecurityProblemHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import javax.crypto.SecretKey;
@@ -18,8 +19,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -62,11 +65,16 @@ public class SecurityConfig {
     }
 
     @Bean
+    JwtEncoder jwtEncoder(JwtProperties properties) {
+        return new NimbusJwtEncoder(new ImmutableSecret<>(signingKey(properties)));
+    }
+
+    @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    static SecretKey signingKey(JwtProperties properties) {
+    private static SecretKey signingKey(JwtProperties properties) {
         return new SecretKeySpec(properties.secret().getBytes(StandardCharsets.UTF_8), "HmacSHA256");
     }
 

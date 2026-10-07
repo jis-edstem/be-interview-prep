@@ -1,6 +1,8 @@
 package com.edstem.interviewprep.controller;
 
+import com.edstem.interviewprep.dto.LoginRequest;
 import com.edstem.interviewprep.dto.RegisterRequest;
+import com.edstem.interviewprep.dto.TokenResponse;
 import com.edstem.interviewprep.dto.UserResponse;
 import com.edstem.interviewprep.service.AuthService;
 import jakarta.validation.Valid;
@@ -23,5 +25,10 @@ public class AuthController {
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse register(@Valid @RequestBody RegisterRequest request) {
         return service.register(request);
+    }
+
+    @PostMapping("/login")
+    public TokenResponse login(@Valid @RequestBody LoginRequest request) {
+        return service.login(request);
     }
 }
