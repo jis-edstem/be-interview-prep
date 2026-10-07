@@ -1,6 +1,7 @@
 package com.edstem.interviewprep.config;
 
 import com.edstem.interviewprep.controller.ShortLinkController;
+import com.edstem.interviewprep.entity.Role;
 import com.edstem.interviewprep.exception.SecurityProblemHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
@@ -45,6 +46,8 @@ public class SecurityConfig {
                                 .permitAll()
                                 .requestMatchers("/error")
                                 .permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/users")
+                                .hasRole(Role.ADMIN.name())
                                 .anyRequest()
                                 .authenticated())
                 .oauth2ResourceServer(resourceServer -> resourceServer
