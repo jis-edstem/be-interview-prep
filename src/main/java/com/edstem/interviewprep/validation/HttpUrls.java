@@ -14,13 +14,13 @@ public final class HttpUrls {
     private static final Set<String> ALLOWED_SCHEMES = Set.of("http", "https");
     private static final Pattern PORT_SUFFIX = Pattern.compile(":\\d*$");
 
-    private HttpUrls() {
-    }
+    private HttpUrls() {}
 
     public static Optional<String> toAscii(String url) {
         try {
             URI uri = new URI(url);
-            if (uri.getScheme() == null || !ALLOWED_SCHEMES.contains(uri.getScheme().toLowerCase(Locale.ROOT))) {
+            if (uri.getScheme() == null
+                    || !ALLOWED_SCHEMES.contains(uri.getScheme().toLowerCase(Locale.ROOT))) {
                 return Optional.empty();
             }
             URI serverBased = uri.getHost() != null ? uri : withAsciiHost(uri);

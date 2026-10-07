@@ -13,6 +13,4 @@ public record ShortenRequest(
                 message = "url must be an absolute http or https URL of at most {maxLength} characters")
         String url,
 
-        @Future(message = "expiresAt must be in the future")
-        Instant expiresAt) {
-}
+        @Future(message = "expiresAt must be in the future") Instant expiresAt) {}

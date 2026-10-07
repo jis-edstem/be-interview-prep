@@ -20,11 +20,9 @@ class UnreadableBodyFieldErrorTest {
 
     private final ApiExceptionHandler handler = new ApiExceptionHandler();
 
-    record Item(String name) {
-    }
+    record Item(String name) {}
 
-    record Order(List<Item> items) {
-    }
+    record Order(List<Item> items) {}
 
     @Test
     void listElementPathIncludesIndex() {
@@ -36,15 +34,19 @@ class UnreadableBodyFieldErrorTest {
 
         ProblemDetail problem = handle(mismatch);
 
-        assertThat(problem.getProperties()).containsEntry("errors",
-                List.of(new FieldErrorResponse("items[1].name", "items[1].name has the wrong type")));
+        assertThat(problem.getProperties())
+                .containsEntry(
+                        "errors", List.of(new FieldErrorResponse("items[1].name", "items[1].name has the wrong type")));
     }
 
     private ProblemDetail handle(MismatchedInputException mismatch) {
         HttpMessageNotReadableException ex =
                 new HttpMessageNotReadableException("unreadable", mismatch, new MockHttpInputMessage(new byte[0]));
         return (ProblemDetail) handler.handleHttpMessageNotReadable(
-                ex, new HttpHeaders(), HttpStatus.BAD_REQUEST, new ServletWebRequest(new MockHttpServletRequest()))
+                        ex,
+                        new HttpHeaders(),
+                        HttpStatus.BAD_REQUEST,
+                        new ServletWebRequest(new MockHttpServletRequest()))
                 .getBody();
     }
 }

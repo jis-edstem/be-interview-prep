@@ -48,7 +48,8 @@ class ShortCodeCollisionTest {
         ShortLinkResponse created = service.shorten(new ShortenRequest("https://example.com/new", null), BASE_URL);
 
         assertThat(created.code()).isEqualTo("FRESH456");
-        assertThat(repository.findByCode(TAKEN).orElseThrow().getOriginalUrl()).isEqualTo("https://example.com/existing");
+        assertThat(repository.findByCode(TAKEN).orElseThrow().getOriginalUrl())
+                .isEqualTo("https://example.com/existing");
     }
 
     @Test

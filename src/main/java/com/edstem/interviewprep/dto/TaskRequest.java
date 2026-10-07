@@ -29,11 +29,9 @@ public record TaskRequest(
         @NotNull(groups = TaskRequest.OnUpdate.class, message = "version is required")
         Long version) {
 
-    public interface OnCreate {
-    }
+    public interface OnCreate {}
 
-    public interface OnUpdate {
-    }
+    public interface OnUpdate {}
 
     public TaskStatus taskStatus() {
         return TaskStatus.valueOf(status);

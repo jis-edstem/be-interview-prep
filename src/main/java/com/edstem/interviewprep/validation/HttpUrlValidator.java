@@ -17,6 +17,8 @@ public class HttpUrlValidator implements ConstraintValidator<HttpUrl, String> {
         if (value == null || value.isBlank()) {
             return true;
         }
-        return HttpUrls.toAscii(value).filter(ascii -> ascii.length() <= maxLength).isPresent();
+        return HttpUrls.toAscii(value)
+                .filter(ascii -> ascii.length() <= maxLength)
+                .isPresent();
     }
 }

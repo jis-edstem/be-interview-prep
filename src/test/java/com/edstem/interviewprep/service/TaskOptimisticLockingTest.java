@@ -35,15 +35,20 @@ class TaskOptimisticLockingTest {
 
     @Test
     void updateRacingAConcurrentCommitPassesVersionCheckButFailsOnFlush() {
-        long id = repository.save(new Task("Original", null, TaskStatus.TODO, null)).getId();
+        long id = repository
+                .save(new Task("Original", null, TaskStatus.TODO, null))
+                .getId();
         TaskRequest staleUpdate = new TaskRequest("Lost edit", null, "IN_PROGRESS", null, 0L);
 
         assertThatThrownBy(() -> transaction.executeWithoutResult(status -> {
-            repository.findById(id).orElseThrow();
-            concurrentTransaction.executeWithoutResult(inner -> repository.findById(id).orElseThrow()
-                    .update("Concurrent edit", null, TaskStatus.DONE, null));
-            service.update(id, staleUpdate);
-        })).isInstanceOf(ObjectOptimisticLockingFailureException.class);
+                    repository.findById(id).orElseThrow();
+                    concurrentTransaction.executeWithoutResult(inner -> repository
+                            .findById(id)
+                            .orElseThrow()
+                            .update("Concurrent edit", null, TaskStatus.DONE, null));
+                    service.update(id, staleUpdate);
+                }))
+                .isInstanceOf(ObjectOptimisticLockingFailureException.class);
 
         Task stored = repository.findById(id).orElseThrow();
         assertThat(stored.getTitle()).isEqualTo("Concurrent edit");

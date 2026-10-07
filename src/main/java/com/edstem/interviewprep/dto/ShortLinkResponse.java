@@ -4,11 +4,7 @@ import com.edstem.interviewprep.entity.ShortLink;
 import java.time.Instant;
 
 public record ShortLinkResponse(
-        String code,
-        String shortUrl,
-        String originalUrl,
-        Instant expiresAt,
-        Instant createdAt) {
+        String code, String shortUrl, String originalUrl, Instant expiresAt, Instant createdAt) {
 
     public static ShortLinkResponse from(ShortLink link, String baseUrl) {
         return new ShortLinkResponse(

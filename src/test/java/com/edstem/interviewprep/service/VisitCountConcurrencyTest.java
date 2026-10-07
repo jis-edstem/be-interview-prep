@@ -31,15 +31,19 @@ class VisitCountConcurrencyTest {
 
     @Test
     void simultaneousVisitsAreAllCounted() {
-        String code = repository.save(new ShortLink("popular1", "https://example.com/launch", null)).getCode();
+        String code = repository
+                .save(new ShortLink("popular1", "https://example.com/launch", null))
+                .getCode();
         CountDownLatch start = new CountDownLatch(1);
 
         try (ExecutorService pool = Executors.newFixedThreadPool(THREADS)) {
             List<CompletableFuture<Void>> visits = IntStream.range(0, VISITS)
-                    .mapToObj(i -> CompletableFuture.runAsync(() -> {
-                        awaitStart(start);
-                        service.resolve(code);
-                    }, pool))
+                    .mapToObj(i -> CompletableFuture.runAsync(
+                            () -> {
+                                awaitStart(start);
+                                service.resolve(code);
+                            },
+                            pool))
                     .toList();
             start.countDown();
             CompletableFuture.allOf(visits.toArray(CompletableFuture[]::new)).join();

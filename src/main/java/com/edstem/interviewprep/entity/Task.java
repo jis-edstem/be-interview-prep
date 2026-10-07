@@ -43,8 +43,7 @@ public class Task {
     @Version
     private Long version;
 
-    protected Task() {
-    }
+    protected Task() {}
 
     public Task(String title, String description, TaskStatus status, LocalDate dueDate) {
         this.title = title;

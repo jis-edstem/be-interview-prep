@@ -7,7 +7,9 @@ import org.springframework.web.ErrorResponseException;
 public class ShortLinkExpiredException extends ErrorResponseException {
 
     public ShortLinkExpiredException(String code) {
-        super(HttpStatus.GONE, ProblemDetail.forStatusAndDetail(HttpStatus.GONE,
-                "Short link " + code + " has expired"), null);
+        super(
+                HttpStatus.GONE,
+                ProblemDetail.forStatusAndDetail(HttpStatus.GONE, "Short link " + code + " has expired"),
+                null);
     }
 }

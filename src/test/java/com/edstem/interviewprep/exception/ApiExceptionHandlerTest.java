@@ -48,7 +48,8 @@ class ApiExceptionHandlerTest {
     void concurrentModificationReturnsConflict() {
         given(taskService.update(eq(1L), any())).willThrow(new ObjectOptimisticLockingFailureException(Task.class, 1L));
 
-        MvcTestResult result = mvc.put().uri("/api/tasks/1")
+        MvcTestResult result = mvc.put()
+                .uri("/api/tasks/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                         {"title": "Write tests", "status": "TODO", "version": 0}
@@ -56,7 +57,9 @@ class ApiExceptionHandlerTest {
                 .exchange();
 
         assertThat(result).hasStatus(HttpStatus.CONFLICT);
-        assertThat(result).bodyJson().extractingPath("$.detail")
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.detail")
                 .isEqualTo("Resource was modified by another request; reload it and retry");
     }
 }

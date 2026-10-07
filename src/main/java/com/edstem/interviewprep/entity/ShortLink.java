@@ -35,8 +35,7 @@ public class ShortLink {
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
-    protected ShortLink() {
-    }
+    protected ShortLink() {}
 
     public ShortLink(String code, String originalUrl, Instant expiresAt) {
         this.code = code;

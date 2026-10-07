@@ -38,8 +38,7 @@ public class ShortLinkService {
                     throw e;
                 }
                 if (attempt == MAX_CODE_ATTEMPTS) {
-                    throw new IllegalStateException(
-                            "No unique short code after " + MAX_CODE_ATTEMPTS + " attempts", e);
+                    throw new IllegalStateException("No unique short code after " + MAX_CODE_ATTEMPTS + " attempts", e);
                 }
             }
         }

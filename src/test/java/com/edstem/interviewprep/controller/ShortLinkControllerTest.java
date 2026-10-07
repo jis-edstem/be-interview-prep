@@ -76,11 +76,22 @@ class ShortLinkControllerTest {
         assertThat(shorten(body)).hasStatus(HttpStatus.CREATED);
         assertThat(shorten(body)).hasStatus(HttpStatus.CREATED);
 
-        assertThat(repository.findAll()).extracting(ShortLink::getCode).doesNotHaveDuplicates().hasSize(2);
+        assertThat(repository.findAll())
+                .extracting(ShortLink::getCode)
+                .doesNotHaveDuplicates()
+                .hasSize(2);
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"not a url", "example.com/no-scheme", "ftp://example.com/file", "javascript:alert(1)", "https://", "http://my_host.example.com/x"})
+    @ValueSource(
+            strings = {
+                "not a url",
+                "example.com/no-scheme",
+                "ftp://example.com/file",
+                "javascript:alert(1)",
+                "https://",
+                "http://my_host.example.com/x"
+            })
     void invalidUrlIsRejected(String url) {
         MvcTestResult result = shorten("""
                 {"url": "%s"}
@@ -101,7 +112,8 @@ class ShortLinkControllerTest {
         String ascii = "https://xn--r8jz45g.jp/%E3%83%91%E3%82%B9";
         assertThat(created).bodyJson().extractingPath("$.originalUrl").isEqualTo(ascii);
         String code = repository.findAll().getFirst().getCode();
-        assertThat(mvc.get().uri("/" + code).exchange().getResponse().getHeader("Location")).isEqualTo(ascii);
+        assertThat(mvc.get().uri("/" + code).exchange().getResponse().getHeader("Location"))
+                .isEqualTo(ascii);
     }
 
     @Test
@@ -113,8 +125,11 @@ class ShortLinkControllerTest {
                 """.formatted(url));
 
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
-        assertThat(result).bodyJson().extractingPath("$.errors[0].message")
-                .isEqualTo("url must be an absolute http or https URL of at most " + ShortLink.URL_MAX_LENGTH + " characters");
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.errors[0].message")
+                .isEqualTo("url must be an absolute http or https URL of at most " + ShortLink.URL_MAX_LENGTH
+                        + " characters");
     }
 
     @Test
@@ -132,7 +147,11 @@ class ShortLinkControllerTest {
                 """);
 
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
-        assertThat(result).bodyJson().extractingPath("$.errors[*].message").asArray().containsExactly("url is required");
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.errors[*].message")
+                .asArray()
+                .containsExactly("url is required");
     }
 
     @Test
@@ -142,7 +161,10 @@ class ShortLinkControllerTest {
                 """.formatted(LONG_URL, Instant.now().minus(1, ChronoUnit.HOURS)));
 
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
-        assertThat(result).bodyJson().extractingPath("$.errors[0].message").isEqualTo("expiresAt must be in the future");
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.errors[0].message")
+                .isEqualTo("expiresAt must be in the future");
     }
 
     @Test
@@ -154,7 +176,8 @@ class ShortLinkControllerTest {
         assertThat(result).hasStatus(HttpStatus.FOUND);
         assertThat(result.getResponse().getHeader("Location")).isEqualTo(LONG_URL);
         assertThat(result.getResponse().getHeader("Cache-Control")).isEqualTo("no-store");
-        assertThat(repository.findByCode("abc12345").orElseThrow().getVisitCount()).isEqualTo(1);
+        assertThat(repository.findByCode("abc12345").orElseThrow().getVisitCount())
+                .isEqualTo(1);
     }
 
     @Test
@@ -181,7 +204,8 @@ class ShortLinkControllerTest {
 
         assertThat(result).hasStatus(HttpStatus.GONE);
         assertThat(result).bodyJson().extractingPath("$.detail").isEqualTo("Short link expired1 has expired");
-        assertThat(repository.findByCode("expired1").orElseThrow().getVisitCount()).isZero();
+        assertThat(repository.findByCode("expired1").orElseThrow().getVisitCount())
+                .isZero();
     }
 
     @Test
@@ -211,6 +235,10 @@ class ShortLinkControllerTest {
     }
 
     private MvcTestResult shorten(String body) {
-        return mvc.post().uri(LINKS).contentType(MediaType.APPLICATION_JSON).content(body).exchange();
+        return mvc.post()
+                .uri(LINKS)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body)
+                .exchange();
     }
 }

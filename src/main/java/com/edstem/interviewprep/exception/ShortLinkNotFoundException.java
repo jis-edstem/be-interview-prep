@@ -7,7 +7,9 @@ import org.springframework.web.ErrorResponseException;
 public class ShortLinkNotFoundException extends ErrorResponseException {
 
     public ShortLinkNotFoundException(String code) {
-        super(HttpStatus.NOT_FOUND, ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,
-                "Short link " + code + " not found"), null);
+        super(
+                HttpStatus.NOT_FOUND,
+                ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Short link " + code + " not found"),
+                null);
     }
 }
