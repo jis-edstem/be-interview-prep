@@ -21,6 +21,9 @@ The app starts on `http://localhost:8080`. `JWT_SECRET` (at least 32 characters)
 ./mvnw test
 ```
 
+To try every endpoint by hand, open `bruno/` in [Bruno](https://www.usebruno.com/), select the `local` environment
+and run the collection. Start the app with the `ADMIN_EMAIL`/`ADMIN_PASSWORD` shown above so the admin requests work.
+
 ## Questions
 
 | # | Question | PR link |
