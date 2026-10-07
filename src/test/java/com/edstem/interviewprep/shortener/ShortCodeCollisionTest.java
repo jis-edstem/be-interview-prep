@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -55,5 +56,15 @@ class ShortCodeCollisionTest {
                 .hasMessage("No unique short code after " + ShortLinkService.MAX_CODE_ATTEMPTS + " attempts");
         then(codeGenerator).should(times(ShortLinkService.MAX_CODE_ATTEMPTS)).next();
         assertThat(repository.count()).isEqualTo(1);
+    }
+
+    @Test
+    void otherConstraintViolationsAreNotRetried() {
+        given(codeGenerator.next()).willReturn("FRESH456");
+        String tooLong = "https://example.com/" + "a".repeat(ShortLink.URL_MAX_LENGTH);
+
+        assertThatThrownBy(() -> service.shorten(new ShortenRequest(tooLong, null), BASE_URL))
+                .isInstanceOf(DataIntegrityViolationException.class);
+        then(codeGenerator).should(times(1)).next();
     }
 }

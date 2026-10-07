@@ -24,6 +24,9 @@ public class ShortLinkService {
             try {
                 return ShortLinkResponse.from(repository.saveAndFlush(link), baseUrl);
             } catch (DataIntegrityViolationException e) {
+                if (!repository.existsByCode(link.getCode())) {
+                    throw e;
+                }
                 if (attempt == MAX_CODE_ATTEMPTS) {
                     throw new IllegalStateException(
                             "No unique short code after " + MAX_CODE_ATTEMPTS + " attempts", e);

@@ -9,6 +9,8 @@ public interface ShortLinkRepository extends JpaRepository<ShortLink, Long> {
 
     Optional<ShortLink> findByCode(String code);
 
+    boolean existsByCode(String code);
+
     @Modifying
     @Query("update ShortLink link set link.visitCount = link.visitCount + 1 where link.id = :id")
     void incrementVisitCount(Long id);
