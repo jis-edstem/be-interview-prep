@@ -1,0 +1,31 @@
+meta {
+  name: Place order with insufficient stock
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/orders
+  body: json
+  auth: bearer
+}
+
+headers {
+  Idempotency-Key: {{$guid}}
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "items": [{ "productId": {{productId}}, "quantity": 100000 }]
+  }
+}
+
+tests {
+  test("returns 409", function() {
+    expect(res.status).to.equal(409);
+  });
+}

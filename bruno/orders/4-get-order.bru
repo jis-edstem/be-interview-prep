@@ -1,0 +1,22 @@
+meta {
+  name: Get order
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/orders/{{orderId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("returns the order", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body.id).to.equal(bru.getVar("orderId"));
+  });
+}

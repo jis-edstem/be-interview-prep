@@ -1,0 +1,32 @@
+meta {
+  name: Update product as user
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/api/products/{{productId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "name": "Renamed",
+    "category": "Books",
+    "price": 1.00,
+    "stock": 1,
+    "rating": 1.0,
+    "version": {{productVersion}}
+  }
+}
+
+tests {
+  test("is forbidden", function() {
+    expect(res.status).to.equal(403);
+  });
+}

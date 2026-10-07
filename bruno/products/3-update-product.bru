@@ -1,0 +1,36 @@
+meta {
+  name: Update product as admin
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/products/{{productId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminToken}}
+}
+
+body:json {
+  {
+    "name": "Books item 1",
+    "category": "Books",
+    "price": {{newPrice}},
+    "stock": 25,
+    "rating": 4.5,
+    "version": {{productVersion}}
+  }
+}
+
+script:pre-request {
+  bru.setVar("newPrice", ((Date.now() % 90000) + 100) / 100);
+}
+
+tests {
+  test("updates the product", function() {
+    expect(res.status).to.equal(200);
+  });
+}

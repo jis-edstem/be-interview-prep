@@ -1,0 +1,32 @@
+meta {
+  name: Shorten URL
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/links
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "url": "https://example.com/some/long/path"
+  }
+}
+
+script:post-response {
+  bru.setVar("code", res.body.code);
+}
+
+tests {
+  test("returns a short code", function() {
+    expect(res.status).to.equal(201);
+    expect(res.body.code).to.have.lengthOf(8);
+  });
+}

@@ -31,4 +31,6 @@ public record ProductRequest(
         @DecimalMin(value = "0.0", message = "rating must be between 0 and 5")
         @DecimalMax(value = "5.0", message = "rating must be between 0 and 5")
         @Digits(integer = 1, fraction = 1, message = "rating must have at most 1 decimal place")
-        BigDecimal rating) {}
+        BigDecimal rating,
+
+        @NotNull(message = "version is required") Long version) {}

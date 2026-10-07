@@ -1,0 +1,30 @@
+meta {
+  name: Create invalid task
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/tasks
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "title": "",
+    "status": "LATER",
+    "dueDate": "2000-01-01"
+  }
+}
+
+tests {
+  test("returns field errors", function() {
+    expect(res.status).to.equal(400);
+    expect(res.body.errors).to.be.an("array");
+  });
+}

@@ -1,0 +1,32 @@
+meta {
+  name: Retry place order
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/orders
+  body: json
+  auth: bearer
+}
+
+headers {
+  Idempotency-Key: {{idempotencyKey}}
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "items": [{ "productId": {{productId}}, "quantity": 1 }]
+  }
+}
+
+tests {
+  test("returns the original order", function() {
+    expect(res.status).to.equal(201);
+    expect(res.body.id).to.equal(bru.getVar("orderId"));
+  });
+}

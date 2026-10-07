@@ -21,6 +21,9 @@ The app starts on `http://localhost:8080`. `JWT_SECRET` (at least 32 characters)
 ./mvnw test
 ```
 
+To try every endpoint by hand, open `bruno/` in [Bruno](https://www.usebruno.com/), select the `local` environment
+and run the collection. Start the app with the `ADMIN_EMAIL`/`ADMIN_PASSWORD` shown above so the admin requests work.
+
 ## Questions
 
 | # | Question | PR link |
@@ -29,6 +32,6 @@ The app starts on `http://localhost:8080`. `JWT_SECRET` (at least 32 characters)
 | 2 | URL Shortener | [#3](https://github.com/jis-edstem/be-interview-prep/pull/3) |
 | 3 | Authentication & Roles | [#4](https://github.com/jis-edstem/be-interview-prep/pull/4) |
 | 4 | Product Catalog | [#5](https://github.com/jis-edstem/be-interview-prep/pull/5) |
-| 5 | Order Service | |
+| 5 | Order Service | [#6](https://github.com/jis-edstem/be-interview-prep/pull/6) |
 
 Video:

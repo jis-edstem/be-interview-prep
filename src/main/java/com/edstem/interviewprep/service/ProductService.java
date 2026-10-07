@@ -6,7 +6,9 @@ import com.edstem.interviewprep.dto.ProductFilter;
 import com.edstem.interviewprep.dto.ProductRequest;
 import com.edstem.interviewprep.dto.ProductResponse;
 import com.edstem.interviewprep.entity.Product;
+import com.edstem.interviewprep.exception.InsufficientStockException;
 import com.edstem.interviewprep.exception.ProductNotFoundException;
+import com.edstem.interviewprep.exception.ProductVersionConflictException;
 import com.edstem.interviewprep.repository.ProductRepository;
 import com.edstem.interviewprep.repository.ProductSpecifications;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +44,11 @@ public class ProductService {
     @CacheEvict(cacheNames = CacheConfig.PRODUCTS, key = "#id")
     public ProductResponse update(Long id, ProductRequest request) {
         Product product = find(id);
+        if (!product.getVersion().equals(request.version())) {
+            throw new ProductVersionConflictException(id, request.version(), product.getVersion());
+        }
         product.update(request.name(), request.category(), request.price(), request.stock(), request.rating());
+        repository.flush();
         return ProductResponse.from(product);
     }
 
@@ -50,6 +56,22 @@ public class ProductService {
     @CacheEvict(cacheNames = CacheConfig.PRODUCTS, key = "#id")
     public void delete(Long id) {
         repository.delete(find(id));
+    }
+
+    @Transactional
+    @CacheEvict(cacheNames = CacheConfig.PRODUCTS, key = "#id")
+    public void reserveStock(Long id, int quantity) {
+        if (repository.decrementStock(id, quantity) == 0) {
+            throw repository.existsById(id)
+                    ? new InsufficientStockException(id, quantity)
+                    : new ProductNotFoundException(id);
+        }
+    }
+
+    @Transactional
+    @CacheEvict(cacheNames = CacheConfig.PRODUCTS, key = "#id")
+    public void releaseStock(Long id, int quantity) {
+        repository.incrementStock(id, quantity);
     }
 
     private static Pageable withTiebreaker(Pageable pageable) {

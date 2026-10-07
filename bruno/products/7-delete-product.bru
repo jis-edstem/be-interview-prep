@@ -1,0 +1,21 @@
+meta {
+  name: Delete product as admin
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{baseUrl}}/api/products/{{deleteProductId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminToken}}
+}
+
+tests {
+  test("deletes the product", function() {
+    expect(res.status).to.equal(204);
+  });
+}

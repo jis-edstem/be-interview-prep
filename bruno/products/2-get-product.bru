@@ -1,0 +1,25 @@
+meta {
+  name: Get product
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/products/{{productId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+script:post-response {
+  bru.setVar("productVersion", res.body.version);
+}
+
+tests {
+  test("returns the product", function() {
+    expect(res.status).to.equal(200);
+  });
+}
