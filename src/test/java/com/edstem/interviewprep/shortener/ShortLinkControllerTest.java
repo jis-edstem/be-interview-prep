@@ -78,7 +78,7 @@ class ShortLinkControllerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"not a url", "example.com/no-scheme", "ftp://example.com/file", "javascript:alert(1)", "https://"})
+    @ValueSource(strings = {"not a url", "example.com/no-scheme", "ftp://example.com/file", "javascript:alert(1)", "https://", "http://my_host.example.com/x"})
     void invalidUrlIsRejected(String url) {
         MvcTestResult result = shorten("""
                 {"url": "%s"}
@@ -87,6 +87,32 @@ class ShortLinkControllerTest {
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
         assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("url");
         assertThat(repository.count()).isZero();
+    }
+
+    @Test
+    void internationalisedUrlIsStoredAndRedirectedInAsciiForm() {
+        MvcTestResult created = shorten("""
+                {"url": "https://例え.jp/パス"}
+                """);
+
+        assertThat(created).hasStatus(HttpStatus.CREATED);
+        String ascii = "https://xn--r8jz45g.jp/%E3%83%91%E3%82%B9";
+        assertThat(created).bodyJson().extractingPath("$.originalUrl").isEqualTo(ascii);
+        String code = repository.findAll().getFirst().getCode();
+        assertThat(mvc.get().uri("/" + code).exchange().getResponse().getHeader("Location")).isEqualTo(ascii);
+    }
+
+    @Test
+    void urlTooLongOnceEncodedIsRejected() {
+        String url = "https://example.com/" + "é".repeat(ShortLink.URL_MAX_LENGTH / 2);
+
+        MvcTestResult result = shorten("""
+                {"url": "%s"}
+                """.formatted(url));
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[0].message")
+                .isEqualTo("url must be an absolute http or https URL of at most " + ShortLink.URL_MAX_LENGTH + " characters");
     }
 
     @Test

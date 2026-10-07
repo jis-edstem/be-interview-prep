@@ -1,5 +1,6 @@
 package com.edstem.interviewprep.shortener;
 
+import com.edstem.interviewprep.validation.HttpUrls;
 import java.time.Instant;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -19,8 +20,10 @@ public class ShortLinkService {
     }
 
     public ShortLinkResponse shorten(ShortenRequest request, String baseUrl) {
+        String url = HttpUrls.toAscii(request.url())
+                .orElseThrow(() -> new IllegalArgumentException("Not an http or https URL: " + request.url()));
         for (int attempt = 1; ; attempt++) {
-            ShortLink link = new ShortLink(codeGenerator.next(), request.url(), request.expiresAt());
+            ShortLink link = new ShortLink(codeGenerator.next(), url, request.expiresAt());
             try {
                 return ShortLinkResponse.from(repository.saveAndFlush(link), baseUrl);
             } catch (DataIntegrityViolationException e) {

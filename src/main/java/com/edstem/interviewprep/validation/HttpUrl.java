@@ -12,7 +12,9 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = HttpUrlValidator.class)
 public @interface HttpUrl {
 
-    String message() default "must be an absolute http or https URL";
+    String message() default "must be an absolute http or https URL of at most {maxLength} characters";
+
+    int maxLength() default Integer.MAX_VALUE;
 
     Class<?>[] groups() default {};
 
