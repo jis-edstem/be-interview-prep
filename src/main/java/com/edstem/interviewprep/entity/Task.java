@@ -1,4 +1,4 @@
-package com.edstem.interviewprep.task;
+package com.edstem.interviewprep.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,10 +11,15 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.Instant;
 import java.time.LocalDate;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "tasks")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Task {
 
     public static final int TITLE_MAX_LENGTH = 100;
@@ -43,9 +48,6 @@ public class Task {
     @Version
     private Long version;
 
-    protected Task() {
-    }
-
     public Task(String title, String description, TaskStatus status, LocalDate dueDate) {
         this.title = title;
         this.description = description;
@@ -58,33 +60,5 @@ public class Task {
         this.description = description;
         this.status = status;
         this.dueDate = dueDate;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public TaskStatus getStatus() {
-        return status;
-    }
-
-    public LocalDate getDueDate() {
-        return dueDate;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public Long getVersion() {
-        return version;
     }
 }

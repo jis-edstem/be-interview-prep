@@ -1,5 +1,7 @@
-package com.edstem.interviewprep.task;
+package com.edstem.interviewprep.dto;
 
+import com.edstem.interviewprep.entity.Task;
+import com.edstem.interviewprep.entity.TaskStatus;
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -12,7 +14,7 @@ public record TaskResponse(
         Instant createdAt,
         Long version) {
 
-    static TaskResponse from(Task task) {
+    public static TaskResponse from(Task task) {
         return new TaskResponse(
                 task.getId(),
                 task.getTitle(),

@@ -1,8 +1,12 @@
-package com.edstem.interviewprep.task;
+package com.edstem.interviewprep.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.edstem.interviewprep.entity.Task;
+import com.edstem.interviewprep.entity.TaskStatus;
+import com.edstem.interviewprep.repository.TaskRepository;
 import java.time.LocalDate;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -16,6 +20,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@RequiredArgsConstructor
 class TaskControllerTest {
 
     private static final String TASKS = "/api/tasks";
@@ -23,11 +28,6 @@ class TaskControllerTest {
 
     private final MockMvcTester mvc;
     private final TaskRepository repository;
-
-    TaskControllerTest(MockMvcTester mvc, TaskRepository repository) {
-        this.mvc = mvc;
-        this.repository = repository;
-    }
 
     @BeforeEach
     void clearTasks() {
@@ -54,7 +54,11 @@ class TaskControllerTest {
         MvcTestResult result = mvc.get().uri(TASKS + "/" + id).exchange();
 
         assertThat(result).hasStatusOk();
-        assertThat(result).bodyJson().extractingPath("$.id").convertTo(Long.class).isEqualTo(id);
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.id")
+                .convertTo(Long.class)
+                .isEqualTo(id);
         assertThat(result).bodyJson().extractingPath("$.title").isEqualTo("Write tests");
     }
 
@@ -86,7 +90,9 @@ class TaskControllerTest {
 
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
         assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("status");
-        assertThat(result).bodyJson().extractingPath("$.errors[0].message")
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.errors[0].message")
                 .isEqualTo("status must be one of [TODO, IN_PROGRESS, DONE]");
     }
 
@@ -120,8 +126,11 @@ class TaskControllerTest {
         MvcTestResult result = putTask(id, versionedTaskJson("Second edit from stale copy", "DONE", 0L));
 
         assertThat(result).hasStatus(HttpStatus.CONFLICT);
-        assertThat(result).bodyJson().extractingPath("$.detail")
-                .isEqualTo("Task " + id + " is at version 1 but the update was based on version 0; reload it and retry");
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.detail")
+                .isEqualTo(
+                        "Task " + id + " is at version 1 but the update was based on version 0; reload it and retry");
         assertThat(repository.findById(id).orElseThrow().getTitle()).isEqualTo("First edit");
     }
 
@@ -184,11 +193,20 @@ class TaskControllerTest {
         MvcTestResult result = postTask(body);
 
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
-        assertThat(result).bodyJson().extractingPath("$.errors[*].field").asArray()
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.errors[*].field")
+                .asArray()
                 .containsExactlyInAnyOrder("title", "status", "dueDate");
-        assertThat(result).bodyJson().extractingPath("$.errors[?(@.field == 'status')].message").asArray()
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.errors[?(@.field == 'status')].message")
+                .asArray()
                 .containsExactly("status must be one of [TODO, IN_PROGRESS, DONE]");
-        assertThat(result).bodyJson().extractingPath("$.errors[?(@.field == 'dueDate')].message").asArray()
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.errors[?(@.field == 'dueDate')].message")
+                .asArray()
                 .containsExactly("dueDate cannot be in the past");
     }
 
@@ -208,7 +226,9 @@ class TaskControllerTest {
 
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
         assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("version");
-        assertThat(result).bodyJson().extractingPath("$.errors[0].message")
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.errors[0].message")
                 .isEqualTo("version must not be sent when creating a task");
         assertThat(repository.count()).isZero();
     }
@@ -218,7 +238,9 @@ class TaskControllerTest {
         MvcTestResult result = postTask(taskJson("x".repeat(Task.TITLE_MAX_LENGTH + 1), "TODO"));
 
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
-        assertThat(result).bodyJson().extractingPath("$.errors[0].message")
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.errors[0].message")
                 .isEqualTo("title must be at most " + Task.TITLE_MAX_LENGTH + " characters");
     }
 
@@ -228,7 +250,9 @@ class TaskControllerTest {
 
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
         assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("status");
-        assertThat(result).bodyJson().extractingPath("$.errors[0].message")
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.errors[0].message")
                 .isEqualTo("status must be one of [TODO, IN_PROGRESS, DONE]");
     }
 
@@ -254,15 +278,25 @@ class TaskControllerTest {
     }
 
     private MvcTestResult postTask(String body) {
-        return mvc.post().uri(TASKS).contentType(MediaType.APPLICATION_JSON).content(body).exchange();
+        return mvc.post()
+                .uri(TASKS)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body)
+                .exchange();
     }
 
     private MvcTestResult putTask(long id, String body) {
-        return mvc.put().uri(TASKS + "/" + id).contentType(MediaType.APPLICATION_JSON).content(body).exchange();
+        return mvc.put()
+                .uri(TASKS + "/" + id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body)
+                .exchange();
     }
 
     private long saveTask(String title, TaskStatus status) {
-        return repository.save(new Task(title, "Cover the API", status, tomorrow)).getId();
+        return repository
+                .save(new Task(title, "Cover the API", status, tomorrow))
+                .getId();
     }
 
     private String taskJson(String title, String status) {

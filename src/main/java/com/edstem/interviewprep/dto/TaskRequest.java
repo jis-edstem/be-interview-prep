@@ -1,5 +1,7 @@
-package com.edstem.interviewprep.task;
+package com.edstem.interviewprep.dto;
 
+import com.edstem.interviewprep.entity.Task;
+import com.edstem.interviewprep.entity.TaskStatus;
 import com.edstem.interviewprep.validation.EnumValue;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
@@ -27,13 +29,11 @@ public record TaskRequest(
         @NotNull(groups = TaskRequest.OnUpdate.class, message = "version is required")
         Long version) {
 
-    interface OnCreate {
-    }
+    public interface OnCreate {}
 
-    interface OnUpdate {
-    }
+    public interface OnUpdate {}
 
-    TaskStatus taskStatus() {
+    public TaskStatus taskStatus() {
         return TaskStatus.valueOf(status);
     }
 }

@@ -12,7 +12,9 @@ public class EnumValueValidator implements ConstraintValidator<EnumValue, String
 
     @Override
     public void initialize(EnumValue annotation) {
-        allowed = Arrays.stream(annotation.value().getEnumConstants()).map(Enum::name).toList();
+        allowed = Arrays.stream(annotation.value().getEnumConstants())
+                .map(Enum::name)
+                .toList();
     }
 
     @Override

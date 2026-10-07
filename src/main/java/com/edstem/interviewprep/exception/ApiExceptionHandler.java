@@ -1,5 +1,6 @@
-package com.edstem.interviewprep.error;
+package com.edstem.interviewprep.exception;
 
+import com.edstem.interviewprep.dto.FieldErrorResponse;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
@@ -68,7 +69,8 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleHttpMessageNotReadable(
             HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, "Request body is malformed");
-        if (ex.getCause() instanceof MismatchedInputException mismatch && !mismatch.getPath().isEmpty()) {
+        if (ex.getCause() instanceof MismatchedInputException mismatch
+                && !mismatch.getPath().isEmpty()) {
             problem.setDetail("Request has invalid fields");
             problem.setProperty(ERRORS_PROPERTY, List.of(fieldError(mismatch)));
         }

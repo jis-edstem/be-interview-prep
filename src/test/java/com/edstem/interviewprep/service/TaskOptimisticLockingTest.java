@@ -1,8 +1,12 @@
-package com.edstem.interviewprep.task;
+package com.edstem.interviewprep.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.edstem.interviewprep.dto.TaskRequest;
+import com.edstem.interviewprep.entity.Task;
+import com.edstem.interviewprep.entity.TaskStatus;
+import com.edstem.interviewprep.repository.TaskRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -31,15 +35,20 @@ class TaskOptimisticLockingTest {
 
     @Test
     void updateRacingAConcurrentCommitPassesVersionCheckButFailsOnFlush() {
-        long id = repository.save(new Task("Original", null, TaskStatus.TODO, null)).getId();
+        long id = repository
+                .save(new Task("Original", null, TaskStatus.TODO, null))
+                .getId();
         TaskRequest staleUpdate = new TaskRequest("Lost edit", null, "IN_PROGRESS", null, 0L);
 
         assertThatThrownBy(() -> transaction.executeWithoutResult(status -> {
-            repository.findById(id).orElseThrow();
-            concurrentTransaction.executeWithoutResult(inner -> repository.findById(id).orElseThrow()
-                    .update("Concurrent edit", null, TaskStatus.DONE, null));
-            service.update(id, staleUpdate);
-        })).isInstanceOf(ObjectOptimisticLockingFailureException.class);
+                    repository.findById(id).orElseThrow();
+                    concurrentTransaction.executeWithoutResult(inner -> repository
+                            .findById(id)
+                            .orElseThrow()
+                            .update("Concurrent edit", null, TaskStatus.DONE, null));
+                    service.update(id, staleUpdate);
+                }))
+                .isInstanceOf(ObjectOptimisticLockingFailureException.class);
 
         Task stored = repository.findById(id).orElseThrow();
         assertThat(stored.getTitle()).isEqualTo("Concurrent edit");

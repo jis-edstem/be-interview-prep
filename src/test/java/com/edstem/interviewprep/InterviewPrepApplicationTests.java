@@ -7,6 +7,5 @@ import org.springframework.boot.test.context.SpringBootTest;
 class InterviewPrepApplicationTests {
 
     @Test
-    void contextLoads() {
-    }
+    void contextLoads() {}
 }

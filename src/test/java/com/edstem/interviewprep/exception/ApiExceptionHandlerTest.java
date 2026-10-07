@@ -1,13 +1,14 @@
-package com.edstem.interviewprep.error;
+package com.edstem.interviewprep.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
-import com.edstem.interviewprep.task.Task;
-import com.edstem.interviewprep.task.TaskController;
-import com.edstem.interviewprep.task.TaskService;
+import com.edstem.interviewprep.controller.TaskController;
+import com.edstem.interviewprep.entity.Task;
+import com.edstem.interviewprep.service.TaskService;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpStatus;
@@ -20,16 +21,13 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 @WebMvcTest(TaskController.class)
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@RequiredArgsConstructor
 class ApiExceptionHandlerTest {
 
     private final MockMvcTester mvc;
 
     @MockitoBean
     private TaskService taskService;
-
-    ApiExceptionHandlerTest(MockMvcTester mvc) {
-        this.mvc = mvc;
-    }
 
     @Test
     void unexpectedErrorReturnsGenericJsonWithoutInternals() {
@@ -48,7 +46,8 @@ class ApiExceptionHandlerTest {
     void concurrentModificationReturnsConflict() {
         given(taskService.update(eq(1L), any())).willThrow(new ObjectOptimisticLockingFailureException(Task.class, 1L));
 
-        MvcTestResult result = mvc.put().uri("/api/tasks/1")
+        MvcTestResult result = mvc.put()
+                .uri("/api/tasks/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                         {"title": "Write tests", "status": "TODO", "version": 0}
@@ -56,7 +55,9 @@ class ApiExceptionHandlerTest {
                 .exchange();
 
         assertThat(result).hasStatus(HttpStatus.CONFLICT);
-        assertThat(result).bodyJson().extractingPath("$.detail")
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.detail")
                 .isEqualTo("Resource was modified by another request; reload it and retry");
     }
 }
