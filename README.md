@@ -7,10 +7,13 @@ Backend interview prep assignment: five Spring Boot features, each shipped as it
 ## Run
 
 ```bash
+export JWT_SECRET="$(openssl rand -base64 48)"
+export ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=change-me-please
 ./mvnw spring-boot:run
 ```
 
-The app starts on `http://localhost:8080`.
+The app starts on `http://localhost:8080`. `JWT_SECRET` (at least 32 characters) is required to sign login tokens.
+`ADMIN_EMAIL` and `ADMIN_PASSWORD` are optional and create an ADMIN account on startup.
 
 ## Test
 
