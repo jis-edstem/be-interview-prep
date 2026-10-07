@@ -6,12 +6,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.edstem.interviewprep.dto.OrderItemRequest;
 import com.edstem.interviewprep.dto.OrderRequest;
 import com.edstem.interviewprep.dto.OrderResponse;
+import com.edstem.interviewprep.dto.ProductRequest;
+import com.edstem.interviewprep.dto.ProductResponse;
 import com.edstem.interviewprep.entity.OrderStatus;
 import com.edstem.interviewprep.entity.Product;
 import com.edstem.interviewprep.exception.IdempotencyKeyReusedException;
 import com.edstem.interviewprep.exception.InsufficientStockException;
 import com.edstem.interviewprep.exception.OrderNotFoundException;
 import com.edstem.interviewprep.exception.ProductNotFoundException;
+import com.edstem.interviewprep.exception.ProductVersionConflictException;
 import com.edstem.interviewprep.repository.OrderRepository;
 import com.edstem.interviewprep.repository.ProductRepository;
 import java.math.BigDecimal;
@@ -137,6 +140,19 @@ class OrderServiceTest {
 
         service.cancel(CUSTOMER, order.id());
         assertThat(productService.get(book).stock()).isEqualTo(5);
+    }
+
+    @Test
+    void productEditFromBeforeAnOrderCannotUndoTheSale() {
+        ProductResponse before = productService.get(book);
+        service.place(CUSTOMER, UUID.randomUUID(), request(item(book, 2)));
+
+        ProductRequest staleEdit = new ProductRequest(
+                before.name(), before.category(), before.price(), before.stock(), before.rating(), before.version());
+
+        assertThatThrownBy(() -> productService.update(book, staleEdit))
+                .isInstanceOf(ProductVersionConflictException.class);
+        assertThat(stock(book)).isEqualTo(3);
     }
 
     private long save(String name, int stock) {

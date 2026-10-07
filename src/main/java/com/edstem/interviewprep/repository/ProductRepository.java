@@ -9,10 +9,10 @@ import org.springframework.data.jpa.repository.Query;
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
     @Modifying
-    @Query("update Product p set p.stock = p.stock - :quantity where p.id = :id and p.stock >= :quantity")
+    @Query("update versioned Product p set p.stock = p.stock - :quantity where p.id = :id and p.stock >= :quantity")
     int decrementStock(Long id, int quantity);
 
     @Modifying
-    @Query("update Product p set p.stock = p.stock + :quantity where p.id = :id")
+    @Query("update versioned Product p set p.stock = p.stock + :quantity where p.id = :id")
     void incrementStock(Long id, int quantity);
 }

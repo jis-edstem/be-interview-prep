@@ -190,6 +190,19 @@ class ProductControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
+    void updateFromStaleVersionReturnsConflict() {
+        long id = repository.save(product("Java Guide", "Books", "25.00", 3)).getId();
+        putProduct(id, productJson("Java Guide, 2nd edition", "29.50"));
+
+        MvcTestResult result = putProduct(id, productJson("Java Guide, 3rd edition", "35.00"));
+
+        assertThat(result).hasStatus(HttpStatus.CONFLICT);
+        assertThat(result).hasContentType(MediaType.APPLICATION_PROBLEM_JSON);
+        assertThat(repository.findById(id).orElseThrow().getName()).isEqualTo("Java Guide, 2nd edition");
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
     void adminDeletesProduct() {
         long id = repository.save(product("Java Guide", "Books", "25.00", 3)).getId();
 
@@ -219,7 +232,7 @@ class ProductControllerTest {
                 .bodyJson()
                 .extractingPath("$.errors[*].field")
                 .asArray()
-                .containsExactlyInAnyOrder("name", "price", "stock", "rating");
+                .containsExactlyInAnyOrder("name", "price", "stock", "rating", "version");
     }
 
     private MvcTestResult putProduct(long id, String body) {
@@ -232,7 +245,7 @@ class ProductControllerTest {
 
     private static String productJson(String name, String price) {
         return """
-                {"name": "%s", "category": "Books", "price": %s, "stock": 3, "rating": 4.5}
+                {"name": "%s", "category": "Books", "price": %s, "stock": 3, "rating": 4.5, "version": 0}
                 """.formatted(name, price);
     }
 

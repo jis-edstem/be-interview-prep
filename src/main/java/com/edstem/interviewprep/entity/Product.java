@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.math.BigDecimal;
 import java.time.Instant;
 import lombok.AccessLevel;
@@ -50,6 +51,9 @@ public class Product {
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
+
+    @Version
+    private Long version;
 
     public Product(String name, String category, BigDecimal price, int stock, BigDecimal rating) {
         this.name = name;

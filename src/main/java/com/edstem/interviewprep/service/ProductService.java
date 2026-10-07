@@ -8,6 +8,7 @@ import com.edstem.interviewprep.dto.ProductResponse;
 import com.edstem.interviewprep.entity.Product;
 import com.edstem.interviewprep.exception.InsufficientStockException;
 import com.edstem.interviewprep.exception.ProductNotFoundException;
+import com.edstem.interviewprep.exception.ProductVersionConflictException;
 import com.edstem.interviewprep.repository.ProductRepository;
 import com.edstem.interviewprep.repository.ProductSpecifications;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +44,11 @@ public class ProductService {
     @CacheEvict(cacheNames = CacheConfig.PRODUCTS, key = "#id")
     public ProductResponse update(Long id, ProductRequest request) {
         Product product = find(id);
+        if (!product.getVersion().equals(request.version())) {
+            throw new ProductVersionConflictException(id, request.version(), product.getVersion());
+        }
         product.update(request.name(), request.category(), request.price(), request.stock(), request.rating());
+        repository.flush();
         return ProductResponse.from(product);
     }
 

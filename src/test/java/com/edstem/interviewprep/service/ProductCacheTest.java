@@ -55,7 +55,8 @@ class ProductCacheTest {
         service.get(id);
 
         service.update(
-                id, new ProductRequest("Java Guide, 2nd edition", "Books", new BigDecimal("29.50"), 3, BigDecimal.ONE));
+                id,
+                new ProductRequest("Java Guide, 2nd edition", "Books", new BigDecimal("29.50"), 3, BigDecimal.ONE, 0L));
 
         assertThat(service.get(id).name()).isEqualTo("Java Guide, 2nd edition");
         assertThat(service.get(id).price()).isEqualByComparingTo("29.50");
@@ -66,7 +67,7 @@ class ProductCacheTest {
         service.get(id);
 
         new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
-            service.update(id, new ProductRequest("Rolled back", "Books", BigDecimal.TEN, 1, BigDecimal.ONE));
+            service.update(id, new ProductRequest("Rolled back", "Books", BigDecimal.TEN, 1, BigDecimal.ONE, 0L));
             service.get(id);
             status.setRollbackOnly();
         });
