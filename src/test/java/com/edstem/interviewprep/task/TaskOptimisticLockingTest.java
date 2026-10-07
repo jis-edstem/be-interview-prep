@@ -15,11 +15,14 @@ import org.springframework.transaction.support.TransactionTemplate;
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class TaskOptimisticLockingTest {
 
+    private final TaskService service;
     private final TaskRepository repository;
     private final TransactionTemplate transaction;
     private final TransactionTemplate concurrentTransaction;
 
-    TaskOptimisticLockingTest(TaskRepository repository, PlatformTransactionManager transactionManager) {
+    TaskOptimisticLockingTest(
+            TaskService service, TaskRepository repository, PlatformTransactionManager transactionManager) {
+        this.service = service;
         this.repository = repository;
         this.transaction = new TransactionTemplate(transactionManager);
         this.concurrentTransaction = new TransactionTemplate(transactionManager);
@@ -27,15 +30,15 @@ class TaskOptimisticLockingTest {
     }
 
     @Test
-    void updateBasedOnSameVersionAsCommittedConcurrentUpdateFails() {
+    void updateRacingAConcurrentCommitPassesVersionCheckButFailsOnFlush() {
         long id = repository.save(new Task("Original", null, TaskStatus.TODO, null)).getId();
+        TaskRequest staleUpdate = new TaskRequest("Lost edit", null, "IN_PROGRESS", null, 0L);
 
         assertThatThrownBy(() -> transaction.executeWithoutResult(status -> {
-            Task loaded = repository.findById(id).orElseThrow();
+            repository.findById(id).orElseThrow();
             concurrentTransaction.executeWithoutResult(inner -> repository.findById(id).orElseThrow()
                     .update("Concurrent edit", null, TaskStatus.DONE, null));
-            loaded.update("Lost edit", null, TaskStatus.IN_PROGRESS, null);
-            repository.flush();
+            service.update(id, staleUpdate);
         })).isInstanceOf(ObjectOptimisticLockingFailureException.class);
 
         Task stored = repository.findById(id).orElseThrow();
