@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import java.util.Arrays;
 import java.util.List;
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -35,6 +36,15 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     ProblemDetail handleConcurrentModification() {
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.CONFLICT, "Resource was modified by another request; reload it and retry");
+    }
+
+    @ExceptionHandler(PropertyReferenceException.class)
+    ProblemDetail handleUnknownSortProperty(PropertyReferenceException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Request has invalid fields");
+        problem.setProperty(
+                ERRORS_PROPERTY,
+                List.of(new FieldErrorResponse("sort", "sort has an unknown property '" + ex.getPropertyName() + "'")));
+        return problem;
     }
 
     @Override
