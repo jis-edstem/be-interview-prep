@@ -19,7 +19,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 class TaskControllerTest {
 
     private static final String TASKS = "/api/tasks";
-    private static final LocalDate TOMORROW = LocalDate.now().plusDays(1);
+    private final LocalDate tomorrow = LocalDate.now().plusDays(1);
 
     private final MockMvcTester mvc;
     private final TaskRepository repository;
@@ -43,7 +43,7 @@ class TaskControllerTest {
         assertThat(result.getResponse().getHeader("Location")).endsWith(TASKS + "/" + id);
         assertThat(result).bodyJson().extractingPath("$.title").isEqualTo("Write tests");
         assertThat(result).bodyJson().extractingPath("$.status").isEqualTo("TODO");
-        assertThat(result).bodyJson().extractingPath("$.dueDate").isEqualTo(TOMORROW.toString());
+        assertThat(result).bodyJson().extractingPath("$.dueDate").isEqualTo(tomorrow.toString());
         assertThat(result).bodyJson().extractingPath("$.createdAt").isNotNull();
     }
 
@@ -262,18 +262,18 @@ class TaskControllerTest {
     }
 
     private long saveTask(String title, TaskStatus status) {
-        return repository.save(new Task(title, "Cover the API", status, TOMORROW)).getId();
+        return repository.save(new Task(title, "Cover the API", status, tomorrow)).getId();
     }
 
-    private static String taskJson(String title, String status) {
+    private String taskJson(String title, String status) {
         return """
                 {"title": "%s", "description": "Cover the API", "status": "%s", "dueDate": "%s"}
-                """.formatted(title, status, TOMORROW);
+                """.formatted(title, status, tomorrow);
     }
 
-    private static String versionedTaskJson(String title, String status, long version) {
+    private String versionedTaskJson(String title, String status, long version) {
         return """
                 {"title": "%s", "status": "%s", "dueDate": "%s", "version": %d}
-                """.formatted(title, status, TOMORROW, version);
+                """.formatted(title, status, tomorrow, version);
     }
 }
