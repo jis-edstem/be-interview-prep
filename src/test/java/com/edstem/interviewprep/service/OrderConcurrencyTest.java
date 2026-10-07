@@ -85,6 +85,19 @@ class OrderConcurrencyTest {
         assertThat(products.findById(productId).orElseThrow().getStock()).isEqualTo(STOCK - 2);
     }
 
+    @Test
+    void simultaneousCancelsReturnStockOnce() {
+        long orderId = service.place(
+                        1L, UUID.randomUUID(), new OrderRequest(List.of(new OrderItemRequest(productId, 3))))
+                .id();
+
+        List<CompletableFuture<OrderResponse>> results =
+                runSimultaneously(RETRIES, attempt -> service.cancel(1L, orderId));
+
+        assertThat(results).allSatisfy(result -> assertThat(result).isCompleted());
+        assertThat(products.findById(productId).orElseThrow().getStock()).isEqualTo(STOCK);
+    }
+
     private static <T> List<CompletableFuture<T>> runSimultaneously(int count, IntFunction<T> call) {
         CountDownLatch start = new CountDownLatch(1);
         try (ExecutorService pool = Executors.newFixedThreadPool(count)) {
