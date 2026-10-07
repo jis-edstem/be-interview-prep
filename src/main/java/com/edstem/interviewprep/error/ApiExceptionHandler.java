@@ -2,6 +2,7 @@ package com.edstem.interviewprep.error;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import java.util.Arrays;
 import java.util.List;
 import org.springframework.http.HttpHeaders;
@@ -43,22 +44,27 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleHttpMessageNotReadable(
             HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, "Request body is malformed");
-        if (ex.getCause() instanceof InvalidFormatException invalid && !invalid.getPath().isEmpty()) {
+        if (ex.getCause() instanceof MismatchedInputException mismatch && !mismatch.getPath().isEmpty()) {
             problem.setDetail("Request has invalid fields");
-            problem.setProperty(ERRORS_PROPERTY, List.of(fieldError(invalid)));
+            problem.setProperty(ERRORS_PROPERTY, List.of(fieldError(mismatch)));
         }
         return handleExceptionInternal(ex, problem, headers, status, request);
     }
 
-    private static FieldErrorResponse fieldError(InvalidFormatException invalid) {
-        String field = invalid.getPath().stream()
+    private static FieldErrorResponse fieldError(MismatchedInputException mismatch) {
+        String field = mismatch.getPath().stream()
                 .map(JsonMappingException.Reference::getFieldName)
                 .reduce((parent, child) -> parent + "." + child)
                 .orElseThrow();
-        Class<?> targetType = invalid.getTargetType();
-        String message = targetType.isEnum()
-                ? field + " must be one of " + Arrays.toString(targetType.getEnumConstants())
-                : field + " has an invalid value '" + invalid.getValue() + "'";
+        Class<?> targetType = mismatch.getTargetType();
+        String message;
+        if (targetType != null && targetType.isEnum()) {
+            message = field + " must be one of " + Arrays.toString(targetType.getEnumConstants());
+        } else if (mismatch instanceof InvalidFormatException invalid) {
+            message = field + " has an invalid value '" + invalid.getValue() + "'";
+        } else {
+            message = field + " has the wrong type";
+        }
         return new FieldErrorResponse(field, message);
     }
 }

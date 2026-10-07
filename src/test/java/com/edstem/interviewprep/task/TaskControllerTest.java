@@ -168,6 +168,17 @@ class TaskControllerTest {
         assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("dueDate");
     }
 
+    @Test
+    void wrongJsonTypeNamesTheField() {
+        MvcTestResult result = postTask("""
+                {"title": ["Write tests"], "status": "TODO"}
+                """);
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("title");
+        assertThat(result).bodyJson().extractingPath("$.errors[0].message").isEqualTo("title has the wrong type");
+    }
+
     private MvcTestResult postTask(String body) {
         return mvc.post().uri(TASKS).contentType(MediaType.APPLICATION_JSON).content(body).exchange();
     }
