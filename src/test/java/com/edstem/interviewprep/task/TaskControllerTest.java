@@ -84,15 +84,37 @@ class TaskControllerTest {
     void updateReplacesTaskFields() {
         long id = saveTask("Write tests", TaskStatus.TODO);
 
-        MvcTestResult result = mvc.put().uri(TASKS + "/" + id)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(taskJson("Write more tests", "IN_PROGRESS"))
-                .exchange();
+        MvcTestResult result = putTask(id, updateJson("Write more tests", "IN_PROGRESS", 0L));
 
         assertThat(result).hasStatusOk();
+        assertThat(result).bodyJson().extractingPath("$.version").isEqualTo(1);
         Task updated = repository.findById(id).orElseThrow();
         assertThat(updated.getTitle()).isEqualTo("Write more tests");
         assertThat(updated.getStatus()).isEqualTo(TaskStatus.IN_PROGRESS);
+    }
+
+    @Test
+    void staleVersionUpdateReturnsConflict() {
+        long id = saveTask("Write tests", TaskStatus.TODO);
+        putTask(id, updateJson("First edit", "IN_PROGRESS", 0L));
+
+        MvcTestResult result = putTask(id, updateJson("Second edit from stale copy", "DONE", 0L));
+
+        assertThat(result).hasStatus(HttpStatus.CONFLICT);
+        assertThat(result).bodyJson().extractingPath("$.detail")
+                .isEqualTo("Task " + id + " is at version 1 but the update was based on version 0; reload it and retry");
+        assertThat(repository.findById(id).orElseThrow().getTitle()).isEqualTo("First edit");
+    }
+
+    @Test
+    void updateWithoutVersionIsRejected() {
+        long id = saveTask("Write tests", TaskStatus.TODO);
+
+        MvcTestResult result = putTask(id, taskJson("Write more tests", "DONE"));
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("version");
+        assertThat(result).bodyJson().extractingPath("$.errors[0].message").isEqualTo("version is required");
     }
 
     @Test
@@ -108,8 +130,7 @@ class TaskControllerTest {
         String unknown = TASKS + "/999";
 
         assertThat(mvc.get().uri(unknown)).hasStatus(HttpStatus.NOT_FOUND);
-        assertThat(mvc.put().uri(unknown).contentType(MediaType.APPLICATION_JSON).content(taskJson("x", "TODO")))
-                .hasStatus(HttpStatus.NOT_FOUND);
+        assertThat(putTask(999L, updateJson("x", "TODO", 0L))).hasStatus(HttpStatus.NOT_FOUND);
         assertThat(mvc.delete().uri(unknown)).hasStatus(HttpStatus.NOT_FOUND);
     }
 
@@ -195,6 +216,10 @@ class TaskControllerTest {
         return mvc.post().uri(TASKS).contentType(MediaType.APPLICATION_JSON).content(body).exchange();
     }
 
+    private MvcTestResult putTask(long id, String body) {
+        return mvc.put().uri(TASKS + "/" + id).contentType(MediaType.APPLICATION_JSON).content(body).exchange();
+    }
+
     private long saveTask(String title, TaskStatus status) {
         return repository.save(new Task(title, "Cover the API", status, TOMORROW)).getId();
     }
@@ -203,5 +228,11 @@ class TaskControllerTest {
         return """
                 {"title": "%s", "description": "Cover the API", "status": "%s", "dueDate": "%s"}
                 """.formatted(title, status, TOMORROW);
+    }
+
+    private static String updateJson(String title, String status, long version) {
+        return """
+                {"title": "%s", "status": "%s", "dueDate": "%s", "version": %d}
+                """.formatted(title, status, TOMORROW, version);
     }
 }

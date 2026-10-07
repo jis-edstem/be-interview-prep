@@ -9,7 +9,8 @@ public record TaskResponse(
         String description,
         TaskStatus status,
         LocalDate dueDate,
-        Instant createdAt) {
+        Instant createdAt,
+        Long version) {
 
     static TaskResponse from(Task task) {
         return new TaskResponse(
@@ -18,6 +19,7 @@ public record TaskResponse(
                 task.getDescription(),
                 task.getStatus(),
                 task.getDueDate(),
-                task.getCreatedAt());
+                task.getCreatedAt(),
+                task.getVersion());
     }
 }

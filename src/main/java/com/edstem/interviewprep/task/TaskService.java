@@ -32,7 +32,11 @@ public class TaskService {
     @Transactional
     public TaskResponse update(Long id, TaskRequest request) {
         Task task = find(id);
+        if (!task.getVersion().equals(request.version())) {
+            throw new TaskVersionConflictException(id, request.version(), task.getVersion());
+        }
         task.update(request.title(), request.description(), request.taskStatus(), request.dueDate());
+        repository.flush();
         return TaskResponse.from(task);
     }
 

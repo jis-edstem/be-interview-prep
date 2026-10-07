@@ -20,7 +20,13 @@ public record TaskRequest(
         String status,
 
         @FutureOrPresent(message = "dueDate cannot be in the past")
-        LocalDate dueDate) {
+        LocalDate dueDate,
+
+        @NotNull(groups = TaskRequest.OnUpdate.class, message = "version is required")
+        Long version) {
+
+    interface OnUpdate {
+    }
 
     TaskStatus taskStatus() {
         return TaskStatus.valueOf(status);
