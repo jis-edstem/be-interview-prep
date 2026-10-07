@@ -25,14 +25,14 @@ public class TaskService {
 
     @Transactional
     public TaskResponse create(TaskRequest request) {
-        Task task = new Task(request.title(), request.description(), request.status(), request.dueDate());
+        Task task = new Task(request.title(), request.description(), request.taskStatus(), request.dueDate());
         return TaskResponse.from(repository.save(task));
     }
 
     @Transactional
     public TaskResponse update(Long id, TaskRequest request) {
         Task task = find(id);
-        task.update(request.title(), request.description(), request.status(), request.dueDate());
+        task.update(request.title(), request.description(), request.taskStatus(), request.dueDate());
         return TaskResponse.from(task);
     }
 

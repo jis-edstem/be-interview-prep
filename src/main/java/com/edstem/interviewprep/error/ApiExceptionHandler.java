@@ -3,7 +3,6 @@ package com.edstem.interviewprep.error;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
-import java.util.Arrays;
 import java.util.List;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -56,15 +55,9 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                 .map(JsonMappingException.Reference::getFieldName)
                 .reduce((parent, child) -> parent + "." + child)
                 .orElseThrow();
-        Class<?> targetType = mismatch.getTargetType();
-        String message;
-        if (targetType != null && targetType.isEnum()) {
-            message = field + " must be one of " + Arrays.toString(targetType.getEnumConstants());
-        } else if (mismatch instanceof InvalidFormatException invalid) {
-            message = field + " has an invalid value '" + invalid.getValue() + "'";
-        } else {
-            message = field + " has the wrong type";
-        }
+        String message = mismatch instanceof InvalidFormatException invalid
+                ? field + " has an invalid value '" + invalid.getValue() + "'"
+                : field + " has the wrong type";
         return new FieldErrorResponse(field, message);
     }
 }

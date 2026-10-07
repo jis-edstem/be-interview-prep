@@ -1,5 +1,6 @@
 package com.edstem.interviewprep.task;
 
+import com.edstem.interviewprep.validation.EnumValue;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -15,8 +16,13 @@ public record TaskRequest(
         String description,
 
         @NotNull(message = "status is required")
-        TaskStatus status,
+        @EnumValue(value = TaskStatus.class, message = "status must be one of {allowed}")
+        String status,
 
         @FutureOrPresent(message = "dueDate cannot be in the past")
         LocalDate dueDate) {
+
+    TaskStatus taskStatus() {
+        return TaskStatus.valueOf(status);
+    }
 }

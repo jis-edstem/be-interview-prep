@@ -127,7 +127,7 @@ class TaskControllerTest {
     @Test
     void invalidFieldsReturnFieldLevelMessages() {
         String body = """
-                {"title": " ", "dueDate": "%s"}
+                {"title": " ", "status": "BLOCKED", "dueDate": "%s"}
                 """.formatted(LocalDate.now().minusDays(1));
 
         MvcTestResult result = postTask(body);
@@ -135,8 +135,20 @@ class TaskControllerTest {
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
         assertThat(result).bodyJson().extractingPath("$.errors[*].field").asArray()
                 .containsExactlyInAnyOrder("title", "status", "dueDate");
+        assertThat(result).bodyJson().extractingPath("$.errors[?(@.field == 'status')].message").asArray()
+                .containsExactly("status must be one of [TODO, IN_PROGRESS, DONE]");
         assertThat(result).bodyJson().extractingPath("$.errors[?(@.field == 'dueDate')].message").asArray()
                 .containsExactly("dueDate cannot be in the past");
+    }
+
+    @Test
+    void missingStatusIsRejected() {
+        MvcTestResult result = postTask("""
+                {"title": "Write tests"}
+                """);
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[0].message").isEqualTo("status is required");
     }
 
     @Test
