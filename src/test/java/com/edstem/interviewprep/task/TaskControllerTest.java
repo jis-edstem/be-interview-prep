@@ -36,10 +36,7 @@ class TaskControllerTest {
 
     @Test
     void createReturnsTaskWithLocation() {
-        MvcTestResult result = mvc.post().uri(TASKS)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(taskJson("Write tests", "TODO"))
-                .exchange();
+        MvcTestResult result = postTask(taskJson("Write tests", "TODO"));
 
         assertThat(result).hasStatus(HttpStatus.CREATED);
         long id = repository.findAll().getFirst().getId();
@@ -114,6 +111,54 @@ class TaskControllerTest {
         assertThat(mvc.put().uri(unknown).contentType(MediaType.APPLICATION_JSON).content(taskJson("x", "TODO")))
                 .hasStatus(HttpStatus.NOT_FOUND);
         assertThat(mvc.delete().uri(unknown)).hasStatus(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void invalidFieldsReturnFieldLevelMessages() {
+        String body = """
+                {"title": " ", "dueDate": "%s"}
+                """.formatted(LocalDate.now().minusDays(1));
+
+        MvcTestResult result = postTask(body);
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[*].field").asArray()
+                .containsExactlyInAnyOrder("title", "status", "dueDate");
+        assertThat(result).bodyJson().extractingPath("$.errors[?(@.field == 'dueDate')].message").asArray()
+                .containsExactly("dueDate cannot be in the past");
+    }
+
+    @Test
+    void titleOverLimitIsRejected() {
+        MvcTestResult result = postTask(taskJson("x".repeat(Task.TITLE_MAX_LENGTH + 1), "TODO"));
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[0].message")
+                .isEqualTo("title must be at most " + Task.TITLE_MAX_LENGTH + " characters");
+    }
+
+    @Test
+    void unknownStatusValueIsRejected() {
+        MvcTestResult result = postTask(taskJson("Write tests", "BLOCKED"));
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("status");
+        assertThat(result).bodyJson().extractingPath("$.errors[0].message")
+                .isEqualTo("status must be one of [TODO, IN_PROGRESS, DONE]");
+    }
+
+    @Test
+    void malformedDueDateIsRejected() {
+        MvcTestResult result = postTask("""
+                {"title": "Write tests", "status": "TODO", "dueDate": "not-a-date"}
+                """);
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("dueDate");
+    }
+
+    private MvcTestResult postTask(String body) {
+        return mvc.post().uri(TASKS).contentType(MediaType.APPLICATION_JSON).content(body).exchange();
     }
 
     private long saveTask(String title, TaskStatus status) {

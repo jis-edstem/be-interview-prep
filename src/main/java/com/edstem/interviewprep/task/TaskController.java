@@ -1,5 +1,6 @@
 package com.edstem.interviewprep.task;
 
+import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -37,7 +38,7 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<TaskResponse> create(@RequestBody TaskRequest request) {
+    public ResponseEntity<TaskResponse> create(@Valid @RequestBody TaskRequest request) {
         TaskResponse created = service.create(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -47,7 +48,7 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public TaskResponse update(@PathVariable Long id, @RequestBody TaskRequest request) {
+    public TaskResponse update(@PathVariable Long id, @Valid @RequestBody TaskRequest request) {
         return service.update(id, request);
     }
 
