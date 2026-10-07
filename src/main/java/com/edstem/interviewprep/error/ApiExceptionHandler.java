@@ -3,7 +3,9 @@ package com.edstem.interviewprep.error;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import java.util.Arrays;
 import java.util.List;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -47,6 +49,22 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @Override
+    protected ResponseEntity<Object> handleTypeMismatch(
+            TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        String field = ex.getPropertyName();
+        if (field == null) {
+            return super.handleTypeMismatch(ex, headers, status, request);
+        }
+        Class<?> requiredType = ex.getRequiredType();
+        String message = requiredType != null && requiredType.isEnum()
+                ? field + " must be one of " + Arrays.toString(requiredType.getEnumConstants())
+                : field + " has an invalid value '" + ex.getValue() + "'";
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, "Request has invalid fields");
+        problem.setProperty(ERRORS_PROPERTY, List.of(new FieldErrorResponse(field, message)));
+        return handleExceptionInternal(ex, problem, headers, status, request);
+    }
+
+    @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(
             HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, "Request body is malformed");
@@ -58,13 +76,25 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private static FieldErrorResponse fieldError(MismatchedInputException mismatch) {
-        String field = mismatch.getPath().stream()
-                .map(JsonMappingException.Reference::getFieldName)
-                .reduce((parent, child) -> parent + "." + child)
-                .orElseThrow();
+        String field = fieldPath(mismatch.getPath());
         String message = mismatch instanceof InvalidFormatException invalid
                 ? field + " has an invalid value '" + invalid.getValue() + "'"
                 : field + " has the wrong type";
         return new FieldErrorResponse(field, message);
+    }
+
+    private static String fieldPath(List<JsonMappingException.Reference> path) {
+        StringBuilder field = new StringBuilder();
+        for (JsonMappingException.Reference reference : path) {
+            if (reference.getFieldName() == null) {
+                field.append('[').append(reference.getIndex()).append(']');
+            } else {
+                if (!field.isEmpty()) {
+                    field.append('.');
+                }
+                field.append(reference.getFieldName());
+            }
+        }
+        return field.toString();
     }
 }

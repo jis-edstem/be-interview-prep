@@ -19,7 +19,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 class TaskControllerTest {
 
     private static final String TASKS = "/api/tasks";
-    private static final LocalDate TOMORROW = LocalDate.now().plusDays(1);
+    private final LocalDate tomorrow = LocalDate.now().plusDays(1);
 
     private final MockMvcTester mvc;
     private final TaskRepository repository;
@@ -43,7 +43,7 @@ class TaskControllerTest {
         assertThat(result.getResponse().getHeader("Location")).endsWith(TASKS + "/" + id);
         assertThat(result).bodyJson().extractingPath("$.title").isEqualTo("Write tests");
         assertThat(result).bodyJson().extractingPath("$.status").isEqualTo("TODO");
-        assertThat(result).bodyJson().extractingPath("$.dueDate").isEqualTo(TOMORROW.toString());
+        assertThat(result).bodyJson().extractingPath("$.dueDate").isEqualTo(tomorrow.toString());
         assertThat(result).bodyJson().extractingPath("$.createdAt").isNotNull();
     }
 
@@ -81,10 +81,29 @@ class TaskControllerTest {
     }
 
     @Test
+    void unknownStatusFilterIsRejected() {
+        MvcTestResult result = mvc.get().uri(TASKS).param("status", "BLOCKED").exchange();
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("status");
+        assertThat(result).bodyJson().extractingPath("$.errors[0].message")
+                .isEqualTo("status must be one of [TODO, IN_PROGRESS, DONE]");
+    }
+
+    @Test
+    void nonNumericIdIsRejected() {
+        MvcTestResult result = mvc.get().uri(TASKS + "/abc").exchange();
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("id");
+        assertThat(result).bodyJson().extractingPath("$.errors[0].message").isEqualTo("id has an invalid value 'abc'");
+    }
+
+    @Test
     void updateReplacesTaskFields() {
         long id = saveTask("Write tests", TaskStatus.TODO);
 
-        MvcTestResult result = putTask(id, updateJson("Write more tests", "IN_PROGRESS", 0L));
+        MvcTestResult result = putTask(id, versionedTaskJson("Write more tests", "IN_PROGRESS", 0L));
 
         assertThat(result).hasStatusOk();
         assertThat(result).bodyJson().extractingPath("$.version").isEqualTo(1);
@@ -96,9 +115,9 @@ class TaskControllerTest {
     @Test
     void staleVersionUpdateReturnsConflict() {
         long id = saveTask("Write tests", TaskStatus.TODO);
-        putTask(id, updateJson("First edit", "IN_PROGRESS", 0L));
+        putTask(id, versionedTaskJson("First edit", "IN_PROGRESS", 0L));
 
-        MvcTestResult result = putTask(id, updateJson("Second edit from stale copy", "DONE", 0L));
+        MvcTestResult result = putTask(id, versionedTaskJson("Second edit from stale copy", "DONE", 0L));
 
         assertThat(result).hasStatus(HttpStatus.CONFLICT);
         assertThat(result).bodyJson().extractingPath("$.detail")
@@ -118,6 +137,17 @@ class TaskControllerTest {
     }
 
     @Test
+    void updateValidatesTaskFields() {
+        long id = saveTask("Write tests", TaskStatus.TODO);
+
+        MvcTestResult result = putTask(id, versionedTaskJson(" ", "TODO", 0L));
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("title");
+        assertThat(repository.findById(id).orElseThrow().getTitle()).isEqualTo("Write tests");
+    }
+
+    @Test
     void deleteRemovesTask() {
         long id = saveTask("Write tests", TaskStatus.TODO);
 
@@ -130,7 +160,7 @@ class TaskControllerTest {
         String unknown = TASKS + "/999";
 
         assertThat(mvc.get().uri(unknown)).hasStatus(HttpStatus.NOT_FOUND);
-        assertThat(putTask(999L, updateJson("x", "TODO", 0L))).hasStatus(HttpStatus.NOT_FOUND);
+        assertThat(putTask(999L, versionedTaskJson("x", "TODO", 0L))).hasStatus(HttpStatus.NOT_FOUND);
         assertThat(mvc.delete().uri(unknown)).hasStatus(HttpStatus.NOT_FOUND);
     }
 
@@ -170,6 +200,17 @@ class TaskControllerTest {
 
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
         assertThat(result).bodyJson().extractingPath("$.errors[0].message").isEqualTo("status is required");
+    }
+
+    @Test
+    void versionOnCreateIsRejected() {
+        MvcTestResult result = postTask(versionedTaskJson("Write tests", "TODO", 3L));
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("version");
+        assertThat(result).bodyJson().extractingPath("$.errors[0].message")
+                .isEqualTo("version must not be sent when creating a task");
+        assertThat(repository.count()).isZero();
     }
 
     @Test
@@ -221,18 +262,18 @@ class TaskControllerTest {
     }
 
     private long saveTask(String title, TaskStatus status) {
-        return repository.save(new Task(title, "Cover the API", status, TOMORROW)).getId();
+        return repository.save(new Task(title, "Cover the API", status, tomorrow)).getId();
     }
 
-    private static String taskJson(String title, String status) {
+    private String taskJson(String title, String status) {
         return """
                 {"title": "%s", "description": "Cover the API", "status": "%s", "dueDate": "%s"}
-                """.formatted(title, status, TOMORROW);
+                """.formatted(title, status, tomorrow);
     }
 
-    private static String updateJson(String title, String status, long version) {
+    private String versionedTaskJson(String title, String status, long version) {
         return """
                 {"title": "%s", "status": "%s", "dueDate": "%s", "version": %d}
-                """.formatted(title, status, TOMORROW, version);
+                """.formatted(title, status, tomorrow, version);
     }
 }

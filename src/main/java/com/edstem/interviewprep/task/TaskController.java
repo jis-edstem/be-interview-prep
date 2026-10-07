@@ -1,6 +1,5 @@
 package com.edstem.interviewprep.task;
 
-import jakarta.validation.Valid;
 import jakarta.validation.groups.Default;
 import java.net.URI;
 import java.util.List;
@@ -40,7 +39,8 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<TaskResponse> create(@Valid @RequestBody TaskRequest request) {
+    public ResponseEntity<TaskResponse> create(
+            @Validated({Default.class, TaskRequest.OnCreate.class}) @RequestBody TaskRequest request) {
         TaskResponse created = service.create(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
