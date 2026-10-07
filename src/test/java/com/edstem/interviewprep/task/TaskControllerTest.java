@@ -103,7 +103,7 @@ class TaskControllerTest {
     void updateReplacesTaskFields() {
         long id = saveTask("Write tests", TaskStatus.TODO);
 
-        MvcTestResult result = putTask(id, updateJson("Write more tests", "IN_PROGRESS", 0L));
+        MvcTestResult result = putTask(id, versionedTaskJson("Write more tests", "IN_PROGRESS", 0L));
 
         assertThat(result).hasStatusOk();
         assertThat(result).bodyJson().extractingPath("$.version").isEqualTo(1);
@@ -115,9 +115,9 @@ class TaskControllerTest {
     @Test
     void staleVersionUpdateReturnsConflict() {
         long id = saveTask("Write tests", TaskStatus.TODO);
-        putTask(id, updateJson("First edit", "IN_PROGRESS", 0L));
+        putTask(id, versionedTaskJson("First edit", "IN_PROGRESS", 0L));
 
-        MvcTestResult result = putTask(id, updateJson("Second edit from stale copy", "DONE", 0L));
+        MvcTestResult result = putTask(id, versionedTaskJson("Second edit from stale copy", "DONE", 0L));
 
         assertThat(result).hasStatus(HttpStatus.CONFLICT);
         assertThat(result).bodyJson().extractingPath("$.detail")
@@ -140,7 +140,7 @@ class TaskControllerTest {
     void updateValidatesTaskFields() {
         long id = saveTask("Write tests", TaskStatus.TODO);
 
-        MvcTestResult result = putTask(id, updateJson(" ", "TODO", 0L));
+        MvcTestResult result = putTask(id, versionedTaskJson(" ", "TODO", 0L));
 
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
         assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("title");
@@ -160,7 +160,7 @@ class TaskControllerTest {
         String unknown = TASKS + "/999";
 
         assertThat(mvc.get().uri(unknown)).hasStatus(HttpStatus.NOT_FOUND);
-        assertThat(putTask(999L, updateJson("x", "TODO", 0L))).hasStatus(HttpStatus.NOT_FOUND);
+        assertThat(putTask(999L, versionedTaskJson("x", "TODO", 0L))).hasStatus(HttpStatus.NOT_FOUND);
         assertThat(mvc.delete().uri(unknown)).hasStatus(HttpStatus.NOT_FOUND);
     }
 
@@ -200,6 +200,17 @@ class TaskControllerTest {
 
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
         assertThat(result).bodyJson().extractingPath("$.errors[0].message").isEqualTo("status is required");
+    }
+
+    @Test
+    void versionOnCreateIsRejected() {
+        MvcTestResult result = postTask(versionedTaskJson("Write tests", "TODO", 3L));
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("version");
+        assertThat(result).bodyJson().extractingPath("$.errors[0].message")
+                .isEqualTo("version must not be sent when creating a task");
+        assertThat(repository.count()).isZero();
     }
 
     @Test
@@ -260,7 +271,7 @@ class TaskControllerTest {
                 """.formatted(title, status, TOMORROW);
     }
 
-    private static String updateJson(String title, String status, long version) {
+    private static String versionedTaskJson(String title, String status, long version) {
         return """
                 {"title": "%s", "status": "%s", "dueDate": "%s", "version": %d}
                 """.formatted(title, status, TOMORROW, version);

@@ -4,6 +4,7 @@ import com.edstem.interviewprep.validation.EnumValue;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
@@ -22,8 +23,12 @@ public record TaskRequest(
         @FutureOrPresent(message = "dueDate cannot be in the past")
         LocalDate dueDate,
 
+        @Null(groups = TaskRequest.OnCreate.class, message = "version must not be sent when creating a task")
         @NotNull(groups = TaskRequest.OnUpdate.class, message = "version is required")
         Long version) {
+
+    interface OnCreate {
+    }
 
     interface OnUpdate {
     }
