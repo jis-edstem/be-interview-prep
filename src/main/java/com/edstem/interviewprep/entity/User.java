@@ -21,6 +21,8 @@ import org.hibernate.annotations.CreationTimestamp;
 public class User {
 
     public static final int EMAIL_MAX_LENGTH = 254;
+    public static final int PASSWORD_MIN_LENGTH = 8;
+    public static final int PASSWORD_MAX_LENGTH = 72;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
