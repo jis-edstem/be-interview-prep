@@ -1,5 +1,6 @@
 package com.edstem.interviewprep.service;
 
+import com.edstem.interviewprep.config.CacheConfig;
 import com.edstem.interviewprep.dto.PageResponse;
 import com.edstem.interviewprep.dto.ProductFilter;
 import com.edstem.interviewprep.dto.ProductRequest;
@@ -9,6 +10,8 @@ import com.edstem.interviewprep.exception.ProductNotFoundException;
 import com.edstem.interviewprep.repository.ProductRepository;
 import com.edstem.interviewprep.repository.ProductSpecifications;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,11 +29,13 @@ public class ProductService {
                 .map(ProductResponse::from));
     }
 
+    @Cacheable(cacheNames = CacheConfig.PRODUCTS, key = "#id", sync = true)
     public ProductResponse get(Long id) {
         return ProductResponse.from(find(id));
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.PRODUCTS, key = "#id")
     public ProductResponse update(Long id, ProductRequest request) {
         Product product = find(id);
         product.update(request.name(), request.category(), request.price(), request.stock(), request.rating());
@@ -38,6 +43,7 @@ public class ProductService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.PRODUCTS, key = "#id")
     public void delete(Long id) {
         repository.delete(find(id));
     }
