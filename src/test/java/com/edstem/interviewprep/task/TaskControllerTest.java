@@ -73,6 +73,17 @@ class TaskControllerTest {
     }
 
     @Test
+    void listFiltersByStatus() {
+        saveTask("First", TaskStatus.TODO);
+        saveTask("Second", TaskStatus.DONE);
+
+        MvcTestResult result = mvc.get().uri(TASKS).param("status", "DONE").exchange();
+
+        assertThat(result).hasStatusOk();
+        assertThat(result).bodyJson().extractingPath("$[*].title").asArray().containsExactly("Second");
+    }
+
+    @Test
     void updateReplacesTaskFields() {
         long id = saveTask("Write tests", TaskStatus.TODO);
 

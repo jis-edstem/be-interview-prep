@@ -14,8 +14,9 @@ public class TaskService {
         this.repository = repository;
     }
 
-    public List<TaskResponse> list() {
-        return repository.findAll().stream().map(TaskResponse::from).toList();
+    public List<TaskResponse> list(TaskStatus status) {
+        List<Task> tasks = status == null ? repository.findAll() : repository.findByStatus(status);
+        return tasks.stream().map(TaskResponse::from).toList();
     }
 
     public TaskResponse get(Long id) {
