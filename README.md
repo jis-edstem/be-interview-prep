@@ -23,7 +23,7 @@ The app starts on `http://localhost:8080`.
 | # | Question | PR link |
 |---|---|---|
 | 1 | Task Manager API | [#1](https://github.com/jis-edstem/be-interview-prep/pull/1), [#2](https://github.com/jis-edstem/be-interview-prep/pull/2) |
-| 2 | URL Shortener | |
+| 2 | URL Shortener | [#3](https://github.com/jis-edstem/be-interview-prep/pull/3) |
 | 3 | Authentication & Roles | |
 | 4 | Product Catalog | |
 | 5 | Order Service | |
