@@ -79,6 +79,18 @@ class AuthControllerTest {
     }
 
     @Test
+    void passwordOverSeventyTwoUtf8BytesIsRejected() {
+        MvcTestResult result = register("ada@example.com", "é".repeat(40));
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.errors[0].message")
+                .isEqualTo("password must be at most 72 bytes in UTF-8");
+        assertThat(repository.count()).isZero();
+    }
+
+    @Test
     void loginReturnsBearerTokenThatExpiresInFifteenMinutes() {
         register("ada@example.com", PASSWORD);
 
