@@ -1,8 +1,9 @@
 package com.edstem.interviewprep.error;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
-import com.fasterxml.jackson.databind.JsonMappingException.Reference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -18,12 +19,19 @@ class UnreadableBodyFieldErrorTest {
 
     private final ApiExceptionHandler handler = new ApiExceptionHandler();
 
+    record Item(String name) {
+    }
+
+    record Order(List<Item> items) {
+    }
+
     @Test
     void listElementPathIncludesIndex() {
-        MismatchedInputException mismatch = MismatchedInputException.from(null, String.class, "wrong type");
-        mismatch.prependPath(new Reference(null, "name"));
-        mismatch.prependPath(new Reference(null, 1));
-        mismatch.prependPath(new Reference(null, "items"));
+        String body = """
+                {"items": [{"name": "first"}, {"name": ["not", "a", "string"]}]}
+                """;
+        MismatchedInputException mismatch = catchThrowableOfType(
+                MismatchedInputException.class, () -> new ObjectMapper().readValue(body, Order.class));
 
         ProblemDetail problem = handle(mismatch);
 
