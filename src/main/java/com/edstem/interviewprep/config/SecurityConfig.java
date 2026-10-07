@@ -57,6 +57,10 @@ public class SecurityConfig {
                                 .permitAll()
                                 .requestMatchers("/api/users")
                                 .hasRole(Role.ADMIN.name())
+                                .requestMatchers(HttpMethod.PUT, "/api/products/**")
+                                .hasRole(Role.ADMIN.name())
+                                .requestMatchers(HttpMethod.DELETE, "/api/products/**")
+                                .hasRole(Role.ADMIN.name())
                                 .anyRequest()
                                 .authenticated())
                 .oauth2ResourceServer(resourceServer -> resourceServer
