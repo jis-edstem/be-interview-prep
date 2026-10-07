@@ -28,7 +28,7 @@ The app starts on `http://localhost:8080`. `JWT_SECRET` (at least 32 characters)
 | 1 | Task Manager API | [#1](https://github.com/jis-edstem/be-interview-prep/pull/1), [#2](https://github.com/jis-edstem/be-interview-prep/pull/2) |
 | 2 | URL Shortener | [#3](https://github.com/jis-edstem/be-interview-prep/pull/3) |
 | 3 | Authentication & Roles | [#4](https://github.com/jis-edstem/be-interview-prep/pull/4) |
-| 4 | Product Catalog | |
+| 4 | Product Catalog | [#5](https://github.com/jis-edstem/be-interview-prep/pull/5) |
 | 5 | Order Service | |
 
 Video:
