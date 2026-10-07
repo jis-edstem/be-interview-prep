@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @SpringBootTest
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
@@ -24,6 +26,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 class ProductCacheTest {
 
     private final ProductService service;
+    private final PlatformTransactionManager transactionManager;
 
     @MockitoSpyBean
     private ProductRepository repository;
@@ -56,6 +59,19 @@ class ProductCacheTest {
 
         assertThat(service.get(id).name()).isEqualTo("Java Guide, 2nd edition");
         assertThat(service.get(id).price()).isEqualByComparingTo("29.50");
+    }
+
+    @Test
+    void rolledBackUpdateNeverReachesTheCache() {
+        service.get(id);
+
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            service.update(id, new ProductRequest("Rolled back", "Books", BigDecimal.TEN, 1, BigDecimal.ONE));
+            service.get(id);
+            status.setRollbackOnly();
+        });
+
+        assertThat(service.get(id).name()).isEqualTo("Java Guide");
     }
 
     @Test
