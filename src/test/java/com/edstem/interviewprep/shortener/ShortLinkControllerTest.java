@@ -98,6 +98,16 @@ class ShortLinkControllerTest {
     }
 
     @Test
+    void blankUrlReportsOnlyThatItIsRequired() {
+        MvcTestResult result = shorten("""
+                {"url": ""}
+                """);
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result).bodyJson().extractingPath("$.errors[*].message").asArray().containsExactly("url is required");
+    }
+
+    @Test
     void pastExpiryIsRejected() {
         MvcTestResult result = shorten("""
                 {"url": "%s", "expiresAt": "%s"}

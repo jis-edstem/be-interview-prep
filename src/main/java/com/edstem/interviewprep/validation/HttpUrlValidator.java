@@ -13,7 +13,7 @@ public class HttpUrlValidator implements ConstraintValidator<HttpUrl, String> {
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        if (value == null) {
+        if (value == null || value.isBlank()) {
             return true;
         }
         try {
