@@ -126,6 +126,20 @@ class OrderControllerTest {
     }
 
     @Test
+    void missingProductIdsAreNotReportedAsRepeated() {
+        MvcTestResult result = place(UUID.randomUUID().toString(), """
+                {"items": [{"quantity": 1}, {"quantity": 1}]}
+                """);
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.errors[*].field")
+                .asArray()
+                .containsExactlyInAnyOrder("items[0].productId", "items[1].productId");
+    }
+
+    @Test
     void tooManyItemsAreRejected() {
         String items = IntStream.rangeClosed(1, OrderRequest.MAX_ITEMS + 1)
                 .mapToObj("{\"productId\": %d, \"quantity\": 1}"::formatted)

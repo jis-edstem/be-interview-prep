@@ -16,6 +16,7 @@ public class DistinctProductsValidator implements ConstraintValidator<DistinctPr
         List<Long> productIds = items.stream()
                 .filter(Objects::nonNull)
                 .map(OrderItemRequest::productId)
+                .filter(Objects::nonNull)
                 .toList();
         return productIds.stream().distinct().count() == productIds.size();
     }
