@@ -1,7 +1,9 @@
 package com.edstem.interviewprep.shortener;
 
+import java.time.Instant;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ShortLinkService {
@@ -28,5 +30,19 @@ public class ShortLinkService {
                 }
             }
         }
+    }
+
+    @Transactional
+    public String resolve(String code) {
+        ShortLink link = find(code);
+        if (link.isExpiredAt(Instant.now())) {
+            throw new ShortLinkExpiredException(code);
+        }
+        repository.incrementVisitCount(link.getId());
+        return link.getOriginalUrl();
+    }
+
+    private ShortLink find(String code) {
+        return repository.findByCode(code).orElseThrow(() -> new ShortLinkNotFoundException(code));
     }
 }

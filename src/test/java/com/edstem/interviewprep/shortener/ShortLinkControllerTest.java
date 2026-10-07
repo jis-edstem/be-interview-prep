@@ -107,6 +107,37 @@ class ShortLinkControllerTest {
         assertThat(result).bodyJson().extractingPath("$.errors[0].message").isEqualTo("expiresAt must be in the future");
     }
 
+    @Test
+    void visitRedirectsToOriginalUrlAndIsCounted() {
+        repository.save(new ShortLink("abc12345", LONG_URL, null));
+
+        MvcTestResult result = mvc.get().uri("/abc12345").exchange();
+
+        assertThat(result).hasStatus(HttpStatus.FOUND);
+        assertThat(result.getResponse().getHeader("Location")).isEqualTo(LONG_URL);
+        assertThat(result.getResponse().getHeader("Cache-Control")).isEqualTo("no-store");
+        assertThat(repository.findByCode("abc12345").orElseThrow().getVisitCount()).isEqualTo(1);
+    }
+
+    @Test
+    void unknownCodeReturnsNotFound() {
+        MvcTestResult result = mvc.get().uri("/missing1").exchange();
+
+        assertThat(result).hasStatus(HttpStatus.NOT_FOUND);
+        assertThat(result).bodyJson().extractingPath("$.detail").isEqualTo("Short link missing1 not found");
+    }
+
+    @Test
+    void expiredCodeReturnsGoneAndIsNotCounted() {
+        repository.save(new ShortLink("expired1", LONG_URL, Instant.now().minus(1, ChronoUnit.MINUTES)));
+
+        MvcTestResult result = mvc.get().uri("/expired1").exchange();
+
+        assertThat(result).hasStatus(HttpStatus.GONE);
+        assertThat(result).bodyJson().extractingPath("$.detail").isEqualTo("Short link expired1 has expired");
+        assertThat(repository.findByCode("expired1").orElseThrow().getVisitCount()).isZero();
+    }
+
     private MvcTestResult shorten(String body) {
         return mvc.post().uri(LINKS).contentType(MediaType.APPLICATION_JSON).content(body).exchange();
     }

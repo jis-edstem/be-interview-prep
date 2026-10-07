@@ -44,6 +44,10 @@ public class ShortLink {
         this.expiresAt = expiresAt;
     }
 
+    public boolean isExpiredAt(Instant instant) {
+        return expiresAt != null && !instant.isBefore(expiresAt);
+    }
+
     public Long getId() {
         return id;
     }
