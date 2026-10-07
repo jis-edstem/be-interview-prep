@@ -51,6 +51,8 @@ public class SecurityConfig {
                                 .permitAll()
                                 .requestMatchers(HttpMethod.GET, ShortLinkController.CODE_PATH)
                                 .permitAll()
+                                .requestMatchers(HttpMethod.HEAD, ShortLinkController.CODE_PATH)
+                                .permitAll()
                                 .requestMatchers("/error")
                                 .permitAll()
                                 .requestMatchers("/api/users")

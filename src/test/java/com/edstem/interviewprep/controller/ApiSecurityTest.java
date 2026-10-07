@@ -70,6 +70,7 @@ class ApiSecurityTest {
     @Test
     void shortLinkRedirectStaysPublic() {
         assertThat(mvc.get().uri("/abcd1234")).hasStatus(HttpStatus.NOT_FOUND);
+        assertThat(mvc.head().uri("/abcd1234")).hasStatus(HttpStatus.NOT_FOUND);
     }
 
     private String token(Instant issuedAt, Instant expiresAt) {
