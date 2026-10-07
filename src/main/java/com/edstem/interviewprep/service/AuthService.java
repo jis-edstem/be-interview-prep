@@ -76,7 +76,6 @@ public class AuthService {
                 .subject(user.getId().toString())
                 .issuedAt(now)
                 .expiresAt(now.plus(jwtProperties.ttl()))
-                .claim("email", user.getEmail())
                 .claim(SecurityConfig.ROLES_CLAIM, List.of(user.getRole().name()))
                 .build();
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
