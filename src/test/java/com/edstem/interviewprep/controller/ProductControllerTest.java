@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.edstem.interviewprep.entity.Product;
 import com.edstem.interviewprep.repository.ProductRepository;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
@@ -86,6 +87,73 @@ class ProductControllerTest {
                 .bodyJson()
                 .extractingPath("$.errors[0].message")
                 .isEqualTo("sort has an unknown property 'colour'");
+    }
+
+    @Test
+    void allFiltersCombineInOneRequest() {
+        repository.saveAll(List.of(
+                product("Java Guide", "Books", "25.00", 3),
+                product("Python Guide", "Books", "40.00", 0),
+                product("Cooking Guide", "Books", "80.00", 5),
+                product("Java Novel", "Books", "15.00", 2),
+                product("Guide Lamp", "Home", "30.00", 4)));
+
+        MvcTestResult result = mvc.get()
+                .uri(PRODUCTS)
+                .param("category", "Books")
+                .param("minPrice", "20")
+                .param("maxPrice", "50")
+                .param("inStock", "true")
+                .param("name", "GUIDE")
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.content[*].name")
+                .asArray()
+                .containsExactly("Java Guide");
+        assertThat(result).bodyJson().extractingPath("$.totalElements").isEqualTo(1);
+    }
+
+    @Test
+    void nameSearchTreatsWildcardsLiterally() {
+        repository.saveAll(
+                List.of(product("100% Cotton Towel", "Home", "9.99", 1), product("Plain Towel", "Home", "7.99", 1)));
+
+        MvcTestResult result = mvc.get().uri(PRODUCTS).param("name", "%").exchange();
+
+        assertThat(result).hasStatusOk();
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.content[*].name")
+                .asArray()
+                .containsExactly("100% Cotton Towel");
+    }
+
+    @Test
+    void invalidPriceFiltersAreRejected() {
+        MvcTestResult negative = mvc.get().uri(PRODUCTS).param("minPrice", "-1").exchange();
+        MvcTestResult inverted = mvc.get()
+                .uri(PRODUCTS)
+                .param("minPrice", "50")
+                .param("maxPrice", "10")
+                .exchange();
+
+        assertThat(negative).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(negative)
+                .bodyJson()
+                .extractingPath("$.errors[0].message")
+                .isEqualTo("minPrice must not be negative");
+        assertThat(inverted).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(inverted)
+                .bodyJson()
+                .extractingPath("$.errors[0].message")
+                .isEqualTo("minPrice must not be greater than maxPrice");
+    }
+
+    private static Product product(String name, String category, String price, int stock) {
+        return new Product(name, category, new BigDecimal(price), stock, BigDecimal.valueOf(4));
     }
 
     private void saveProducts(int count) {
