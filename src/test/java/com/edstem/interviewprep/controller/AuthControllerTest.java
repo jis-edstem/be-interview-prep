@@ -114,6 +114,20 @@ class AuthControllerTest {
     }
 
     @Test
+    void loginIgnoresAStaleBearerToken() {
+        register("ada@example.com", PASSWORD);
+
+        MvcTestResult result = mvc.post()
+                .uri("/api/auth/login")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer expired-or-garbage")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(credentialsJson("ada@example.com", PASSWORD))
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+    }
+
+    @Test
     void wrongPasswordAndUnknownEmailGetTheSameJson401() {
         register("ada@example.com", PASSWORD);
 
