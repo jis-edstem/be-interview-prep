@@ -12,7 +12,9 @@ import com.edstem.interviewprep.repository.ProductSpecifications;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,11 +23,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class ProductService {
 
+    private static final String TIEBREAKER = "id";
+
     private final ProductRepository repository;
 
     public PageResponse<ProductResponse> list(ProductFilter filter, Pageable pageable) {
         return PageResponse.from(repository
-                .findAll(ProductSpecifications.matching(filter), pageable)
+                .findAll(ProductSpecifications.matching(filter), withTiebreaker(pageable))
                 .map(ProductResponse::from));
     }
 
@@ -46,6 +50,16 @@ public class ProductService {
     @CacheEvict(cacheNames = CacheConfig.PRODUCTS, key = "#id")
     public void delete(Long id) {
         repository.delete(find(id));
+    }
+
+    private static Pageable withTiebreaker(Pageable pageable) {
+        if (pageable.getSort().getOrderFor(TIEBREAKER) != null) {
+            return pageable;
+        }
+        return PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                pageable.getSort().and(Sort.by(TIEBREAKER)));
     }
 
     private Product find(Long id) {
